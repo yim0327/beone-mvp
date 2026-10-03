@@ -1,0 +1,3 @@
+<resources>
+    <style name="Theme.BeOne" parent="Theme.AppCompat.DayNight.NoActionBar" />
+</resources>

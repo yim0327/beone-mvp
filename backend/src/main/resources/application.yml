@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: beone-api
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3307/beone}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never

@@ -1,0 +1,27 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+*.iml
+
+# Environment files (secrets). Only *.example files are committed.
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Real CODEF responses and personal transaction data must never be committed (PRD §7)
+fixtures/private/
+
+# Signing keys
+*.jks
+*.keystore
+*.p12
+*.pem
+
+# Local tool state
+.omc/

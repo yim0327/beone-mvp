@@ -4,7 +4,7 @@ BeONE은 사용자가 보유한 카드 중 **월간 총예상 혜택이 가장 �
 
 > 실제 결제는 발생하지 않습니다. 결제는 서비스 내부의 모의 승인으로 대체합니다.
 
-요구사항의 기준 문서는 [`docs/PRD.md`](docs/PRD.md)이고, 미결 결정은 [`docs/decisions.md`](docs/decisions.md)에 기록합니다.
+요구사항의 기준 문서는 [`docs/PRD.md`](docs/PRD.md)이고, 미결 결정은 [`docs/decisions.md`](docs/decisions.md)에 기록합니다. 이슈·브랜치·커밋·PR 절차는 [`CONTRIBUTING.md`](CONTRIBUTING.md), 코드·테스트 규칙은 [`docs/conventions.md`](docs/conventions.md)를 따릅니다.
 
 ## 저장소 구조
 
@@ -12,7 +12,7 @@ BeONE은 사용자가 보유한 카드 중 **월간 총예상 혜택이 가장 �
 android/    Android 앱 (Kotlin, React 화면을 WebView로 표시할 셸)
 frontend/   React 웹 (Vite + TypeScript)
 backend/    Spring Boot API (Java 21, MySQL)
-docs/       PRD, 결정 기록
+docs/       PRD, 결정 기록, 코드·테스트 컨벤션
 fixtures/   평가·시연용 데이터 (fixtures/private/ 는 git 제외)
 docker-compose.yml   로컬 MySQL
 .env.example         환경변수 예시
@@ -115,12 +115,15 @@ cd android
 ./gradlew assembleDebug testDebugUnitTest lintDebug
 ```
 
-계측 테스트(`connectedAndroidTest`)는 기기 또는 에뮬레이터가 필요하며 아직 없습니다.
+계측 테스트(`connectedAndroidTest`)는 아직 작성하지 않았습니다. 추가하면 기기 또는 에뮬레이터를 연결해 실행합니다. 생체인증·기기 PIN·60초 활성화의 최종 확인은 에뮬레이터가 아닌 실제 Android 기기에서 합니다 ([PRD FR-06](docs/PRD.md)).
 
 ## 보안 원칙
 
 자세한 내용은 [PRD §7](docs/PRD.md#7-보안과-표시-원칙)을 따릅니다.
 
 - 실물 카드번호, CVV, 카드 비밀번호, 계좌정보를 수집·저장하지 않습니다.
-- CODEF 키·토큰과 연결 비밀번호는 서버에서만 다루고 DB·로그·브라우저 저장소에 남기지 않습니다.
-- 실제 CODEF 응답 전문과 개인 거래내역은 `fixtures/private/`에만 두며, 이 디렉터리는 git에서 제외됩니다.
+- CODEF 키·토큰은 서버(backend)에서 관리하며 Android 앱·프런트엔드·Git 저장소에 넣지 않습니다.
+- CODEF 연결 비밀번호는 CODEF 연결 요청에만 사용하고 DB·로그·브라우저 저장소에 남기지 않습니다.
+- 실계정 CODEF 응답 전문은 저장하거나 로그에 남기지 않습니다.
+- 실제 개인 거래내역은 Git 저장소·공개 평가 자료·fixture·이슈·PR에 포함하지 않습니다. 서비스에서 실제 조회한 거래와 자체 모의 거래 원장은 구분해 관리합니다.
+- `fixtures/private/`은 git에서 제외되지만, 실제 민감정보의 보관 장소로 사용하지 않습니다.

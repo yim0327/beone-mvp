@@ -14,7 +14,8 @@ Thumbs.db
 **/.env.*
 !**/.env.example
 
-# Real CODEF responses and personal transaction data must never be committed (PRD §7)
+# Local-only fixtures. Ignored by git, but NOT a place to keep real CODEF responses
+# or personal transaction data (PRD §7).
 fixtures/private/
 
 # Signing keys

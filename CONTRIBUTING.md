@@ -9,9 +9,9 @@ BeONE의 기능 요구사항은 [PRD](docs/PRD.md), 미결 결정은 [결정 기
 3. 관련 코드와 테스트를 함께 변경합니다.
 4. 변경한 프로젝트의 테스트·빌드를 실행합니다.
 5. `develop`을 대상으로 PR을 열고 관련 이슈와 검증 결과를 적습니다.
-6. 팀원 리뷰 후 병합합니다.
+6. PR을 검토한 뒤 병합합니다.
 
-GitHub 저장소를 연결할 때 `develop` 브랜치를 생성합니다. `main`은 통합·제출 기준 브랜치로 사용하며, `develop`의 변경을 `main`에 반영할 때도 PR을 사용합니다.
+`develop`은 일상 개발의 통합 브랜치, `main`은 제출 기준 브랜치입니다. `develop`의 변경을 `main`에 반영할 때도 PR을 사용합니다.
 
 ## 브랜치 이름
 
@@ -49,17 +49,18 @@ chore(android): Gradle 데몬 JDK 버전 고정
 
 - 타입은 브랜치 종류와 같은 `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `harness`를 사용합니다.
 - 제목에는 무엇이 바뀌었는지 적고, 변경 이유나 주의 사항이 필요하면 본문에 적습니다.
-- `Co-Authored-By` 등 AI 도구의 공동 작성 표기는 필수로 사용하지 않습니다. 학교나 팀의 AI 활용 공개 규정이 있다면 별도로 따릅니다.
+- AI 도구의 `Co-Authored-By` 공동 작성 표기는 사용하지 않습니다. 학교나 팀의 AI 활용 공개 규정이 있다면 별도로 따릅니다.
 
 ## 이슈와 PR
 
 - `.github/ISSUE_TEMPLATE/`의 해당 양식을 사용합니다.
-- PR 대상 브랜치는 `develop`입니다. `main` 반영 PR은 예외입니다.
+- 작업 브랜치 PR의 대상(base)은 `develop`입니다. 저장소 기본 브랜치는 `main`이므로 PR을 열 때 대상을 확인합니다. `develop`을 `main`에 반영하는 PR만 `main`을 대상으로 합니다.
 - PR 본문에는 `관련 이슈: #123` 형식으로 이슈를 연결합니다.
 - 변경 내용, 검증 결과, 리뷰가 필요한 부분을 적습니다.
 - UI를 변경했다면 가능할 때 화면 캡처를 첨부합니다.
 - 원칙적으로 다른 팀원 한 명의 리뷰를 받은 뒤 병합합니다.
-- 작업 브랜치의 PR은 squash merge를 사용해 변경 이력을 정리합니다.
+- 작업 브랜치 → `develop` PR은 squash merge를 사용합니다.
+- `develop` → `main` PR은 merge commit을 사용합니다. 두 브랜치의 허용 병합 방식은 각각 GitHub 룰셋으로 제한합니다.
 
 `develop`으로 병합하는 PR에서 이슈가 자동으로 닫힐 것이라고 가정하지 않습니다. 작업 완료 여부를 확인한 뒤 이슈를 직접 정리하거나 `main` 반영 시점에 정리합니다.
 
@@ -73,8 +74,10 @@ chore(android): Gradle 데몬 JDK 버전 고정
 
 프로젝트별 실행·테스트 명령은 [README](README.md)의 **빌드·테스트** 항목을 기준으로 합니다. 관련 없는 프로젝트의 테스트는 PR에 `해당 없음`으로 표시합니다.
 
-## GitHub 저장소를 연결할 때
+## GitHub 저장소 설정
 
-- `develop` 브랜치를 만듭니다.
-- 이슈 템플릿에서 사용하는 `feat`, `fix`, `refactor`, `docs`, `chore`, `harness` 라벨을 만듭니다.
-- PR의 기본 대상 브랜치와 리뷰·병합 설정이 위 흐름과 일치하는지 확인합니다.
+- 기본 브랜치는 `main`, 개발 통합 브랜치는 `develop`입니다.
+- `protect-develop` 룰셋은 PR을 필수로 하고 squash merge만 허용합니다.
+- `protect-main` 룰셋은 PR을 필수로 하고 merge commit만 허용합니다.
+- 두 룰셋 모두 브랜치 삭제와 force push를 차단합니다.
+- 이슈 라벨은 `feat`, `fix`, `refactor`, `docs`, `chore`, `harness`, `test`, `android`, `frontend`, `backend`를 사용합니다.

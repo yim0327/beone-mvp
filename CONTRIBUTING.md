@@ -11,7 +11,7 @@ BeONE의 기능 요구사항은 [PRD](docs/PRD.md), 미결 결정은 [결정 기
 5. `develop`을 대상으로 PR을 열고 관련 이슈와 검증 결과를 적습니다.
 6. PR을 검토한 뒤 병합합니다.
 
-`develop`은 일상 개발의 통합 브랜치, `main`은 제출 기준 브랜치입니다. `develop`의 변경을 `main`에 반영할 때도 PR을 사용합니다.
+`develop`은 기본 브랜치이자 일상 개발의 통합 브랜치, `main`은 배포·제출 기준 브랜치입니다. `develop`의 변경을 `main`에 반영할 때도 PR을 사용합니다.
 
 ## 브랜치 이름
 
@@ -54,15 +54,15 @@ chore(android): Gradle 데몬 JDK 버전 고정
 ## 이슈와 PR
 
 - `.github/ISSUE_TEMPLATE/`의 해당 양식을 사용합니다.
-- 작업 브랜치 PR의 대상(base)은 `develop`입니다. 저장소 기본 브랜치는 `main`이므로 PR을 열 때 대상을 확인합니다. `develop`을 `main`에 반영하는 PR만 `main`을 대상으로 합니다.
-- PR 본문에는 `관련 이슈: #123` 형식으로 이슈를 연결합니다.
+- 작업 브랜치 PR의 대상(base)은 기본 브랜치인 `develop`입니다. PR을 열 때 대상을 확인합니다. `develop`을 `main`에 반영하는 PR만 `main`을 대상으로 합니다.
+- 작업 브랜치 → `develop` PR 본문에는 `Closes #123` 형식으로 이슈를 연결합니다.
 - 변경 내용, 검증 결과, 리뷰가 필요한 부분을 적습니다.
 - UI를 변경했다면 가능할 때 화면 캡처를 첨부합니다.
 - 원칙적으로 다른 팀원 한 명의 리뷰를 받은 뒤 병합합니다.
 - 작업 브랜치 → `develop` PR은 squash merge를 사용합니다.
 - `develop` → `main` PR은 merge commit을 사용합니다. 두 브랜치의 허용 병합 방식은 각각 GitHub 룰셋으로 제한합니다.
 
-`develop`으로 병합하는 PR에서 이슈가 자동으로 닫힐 것이라고 가정하지 않습니다. 작업 완료 여부를 확인한 뒤 이슈를 직접 정리하거나 `main` 반영 시점에 정리합니다.
+`develop`은 기본 브랜치이므로, 이를 대상으로 한 PR 본문에 `Closes #123`을 적으면 PR 병합 시 해당 이슈가 자동으로 닫힙니다. `#123`만 적으면 이슈 링크만 만들어지고 자동으로 닫히지는 않습니다. `main` 대상 PR에서는 닫기 키워드로 이슈가 자동 종료되지 않습니다.
 
 ## PR을 열기 전 확인
 
@@ -76,7 +76,7 @@ chore(android): Gradle 데몬 JDK 버전 고정
 
 ## GitHub 저장소 설정
 
-- 기본 브랜치는 `main`, 개발 통합 브랜치는 `develop`입니다.
+- 기본 브랜치이자 개발 통합 브랜치는 `develop`이고, `main`은 배포·제출 기준 브랜치입니다.
 - `protect-develop` 룰셋은 PR을 필수로 하고 squash merge만 허용합니다.
 - `protect-main` 룰셋은 PR을 필수로 하고 merge commit만 허용합니다.
 - 두 룰셋 모두 브랜치 삭제와 force push를 차단합니다.

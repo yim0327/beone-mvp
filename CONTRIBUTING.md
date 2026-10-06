@@ -81,3 +81,12 @@ chore(android): Gradle 데몬 JDK 버전 고정
 - `protect-main` 룰셋은 PR을 필수로 하고 merge commit만 허용합니다.
 - 두 룰셋 모두 브랜치 삭제와 force push를 차단합니다.
 - 이슈 라벨은 `feat`, `fix`, `refactor`, `docs`, `chore`, `harness`, `test`, `android`, `frontend`, `backend`를 사용합니다.
+
+## CodeRabbit 리뷰 확인
+
+1. `develop` 대상 PR을 연 뒤 CodeRabbit의 상태 댓글과 실제 리뷰 댓글을 확인합니다. 자동 리뷰가 시작되었다면 중복으로 수동 명령을 남기지 않습니다.
+2. 자동 리뷰가 시작되지 않으면 상태 댓글의 **Trigger review**를 누르거나 PR의 일반 댓글에 `@coderabbitai full review`를 남겨 전체 리뷰를 요청합니다. 요약·상태 댓글만으로 코드 리뷰가 완료됐다고 판단하지 않습니다.
+3. 후속 커밋을 올린 뒤 자동 증분 리뷰가 달렸는지 확인합니다. 시작되지 않으면 `@coderabbitai review`로 새 변경분을 요청합니다. 전체 변경을 처음부터 다시 검토해야 할 때만 `@coderabbitai full review`를 사용합니다.
+4. CodeRabbit의 의견은 참고 자료입니다. 실제 오류 여부와 수정 사항을 사람이 확인하고, 팀원 리뷰와 관련 테스트를 거친 뒤 병합합니다. CodeRabbit 자동 승인이나 체크를 필수 병합 조건으로 사용하지 않습니다.
+
+리뷰 시작 조건과 명령은 [CodeRabbit 자동 리뷰 설정](https://docs.coderabbit.ai/configuration/auto-review), [리뷰 명령](https://docs.coderabbit.ai/reference/review-commands), [플랜별 조건](https://docs.coderabbit.ai/management/plans)을 참고합니다.

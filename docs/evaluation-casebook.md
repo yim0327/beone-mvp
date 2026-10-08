@@ -6,7 +6,8 @@
 - 기본 시계는 2026-10-15(한국시간), 등록일은 2026-01-01, 이전 실적 창 원장은 완전하며 적히지 않은 거래는 없다. 이전 실적용 `ORDINARY`는 할인받지 않은 인정 거래, `TAX`는 제외 거래, `CANCEL_RECEIVED`는 표기된 월에 접수된 취소다. 지정한 `merchantClass`·결제 방식은 이 **가상 시나리오에서 확인된 분류**이고 카드사나 CODEF가 실제 반환했다는 뜻이 아니다.
 - 적지 않은 혜택 사용액은 0원, 예정 소비는 0건이다. 상품권·무이자할부·입점매장·통합청구 등 추가 제외 조건은 없는 입력으로 고정한다. 선택 서비스가 필요한 C04는 `FUEL`이 9월 1일부터 유효하다고 가정한다. 카드별 공식 규칙의 실제 효력 시작일은 미검증이다.
 - `기대 카드`는 후보 규칙만 모두 적용 가능하다고 **조건부**로 가정한 값이다. 금액 0원은 조건 불충족 또는 한도 소진이고, `확인 필요`는 0원과 다르다. 카드별 `applicationStatusByCard`가 사유를 분리한다. C02는 가상 규칙 만료를 시험하므로 금액·추천을 비워 두며 0원으로 대체하지 않는다.
-- 2026-10-08 개정: 사용자 결정 [D-10~D-12](../docs/decisions.md#d-10d-12-확정-정책)를 반영했다. 노리 통신 할인은 건당 5만원 이상 2,500원 정액(월 1회), 티타늄 1% 포인트리는 1점=1원 혜택으로 포함, 동률은 월간 총혜택, 현재 주문 혜택, 사용자가 지정한 대표 카드, 카드 ID 문자열 오름차순 순서로 가른다. 마지막 두 단계는 혜택 우열과 무관한 **임의 규칙**이며 약관이 직접 정한 것이 아니다. 이 결정들은 약관 원문의 명시 사항이 아니라 해석·정책 결정이다.
+- 2026-10-08 개정: 사용자 결정 [D-10~D-12](https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/decisions.md#d-10d-12-확정-정책)를 반영했다. 노리 통신 할인은 건당 5만원 이상 2,500원 정액(월 1회), 티타늄 1% 포인트리는 1점=1원 혜택으로 포함, 동률은 월간 총혜택, 현재 주문 혜택, 사용자가 지정한 대표 카드, 카드 ID 문자열 오름차순 순서로 가른다. 마지막 두 단계는 혜택 우열과 무관한 **임의 규칙**이며 약관이 직접 정한 것이 아니다. 이 결정들은 약관 원문의 명시 사항이 아니라 해석·정책 결정이다.
+- D-10~D-12와 PRD FR-05의 출처는 PR #14 병합 커밋 `55ff483`에 고정한다. 평가 브랜치의 과거 문서가 아닌 병합된 정책을 기준으로 하며, M01의 대표 카드 `09271` 선택은 이 정책과 일치한다. 옛 PRD의 카드 ID 우선 규칙으로 정답을 되돌리지 않는다.
 - 동률 사례는 `tie`(동률 카드)와 `tieBreak`(사용한 기준)를 정답에 함께 적는다. 카드 상태는 0원 초과로 적용된 서비스가 있으면 `APPLIED`, 서비스 산식 금액이 잔여 한도를 넘어 잘리면 `APPLIED_CAP_REMAINING`, 적용된 서비스가 없으면 그 사유 코드다. 규칙 유효기간이 지난 경우는 `RULE_EXPIRED`이며, 검증된 규칙 자체가 없는 경우의 `NO_VERIFIED_RULE`은 아직 사례에 쓰지 않았다.
 - PRD가 요구하는 독립 교차 검토 담당(D-06)은 미결이다. 규칙 버전·대상 분류·취소/한도/원 미만 처리의 검증 후 별도 승인해야 정답을 고정할 수 있다. 엔진이 아직 없어서 이 파일만으로 자동 테스트 통과를 주장하지 않는다.
 
@@ -18,11 +19,11 @@
 - **NO**: [공식 상품설명서](https://img2.kbcard.com/obj/card/download/01664__prdctOpmn_20260818.pdf) 1~2쪽(2쪽: 월간 통합할인한도 표, 통신 자동이체 할인의 전월 30만원 조건, 취소금액의 접수월 차감); [공식 상품 상세](https://card.kbcard.com/CRD/DVIEW/HCAMCXPRICAC0076?mainCC=a&cooperationcode=01664) 통신 할인 항목.
 - **CC**: [공식 원문](https://img2.kbcard.com/obj/card/download/01914__prdctOpmn_20260818.pdf) (pp.1-2)
 - **D03**: [저장소 문서](../docs/decisions.md#d-03d-04-확정-정책)
-- **D10**: [저장소 문서](../docs/decisions.md#d-10d-12-확정-정책) (노리 통신 정액 2,500원)
-- **D11**: [저장소 문서](../docs/decisions.md#d-10d-12-확정-정책) (티타늄 포인트리 1점=1원)
-- **D12**: [저장소 문서](../docs/decisions.md#d-10d-12-확정-정책) (동률 규칙, 임의 규칙)
+- **D10**: [저장소 문서](https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/decisions.md#d-10d-12-확정-정책) (노리 통신 정액 2,500원)
+- **D11**: [저장소 문서](https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/decisions.md#d-10d-12-확정-정책) (티타늄 포인트리 1점=1원)
+- **D12**: [저장소 문서](https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/decisions.md#d-10d-12-확정-정책) (동률 규칙, 임의 규칙)
 - **PRD_RULE**: [저장소 문서](../docs/PRD.md#fr-01-공식-약관과-규칙-데이터)
-- **PRD_OPT**: [저장소 문서](../docs/PRD.md#fr-05-결정론적-혜택-계산과-최적화)
+- **PRD_OPT**: [저장소 문서](https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/PRD.md#fr-05-결정론적-혜택-계산과-최적화)
 
 ## 대표 사례 20개
 
@@ -31,7 +32,7 @@
 - 카드: `09271`. 전월 합성 원장: 없음.
 - 현재 주문: 2026-10-15 ORDINARY_DOMESTIC 100,000원, DIRECT. 당월 사용: 0원.
 - 후보 기대: 09271 1,000원. 적용 상태: 09271 APPLIED. 기대 카드: `09271`.
-- 손계산·판정: 100,000×1%=1,000. 근거: [TI_BASE](https://img2.kbcard.com/obj/card/download/09271__prdctOpmn_20240417.pdf), [D11](../docs/decisions.md#d-10d-12-확정-정책).
+- 손계산·판정: 100,000×1%=1,000. 근거: [TI_BASE](https://img2.kbcard.com/obj/card/download/09271__prdctOpmn_20240417.pdf), [D11](https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/decisions.md#d-10d-12-확정-정책).
 
 ### C02. 약관 버전 만료/부재
 
@@ -52,7 +53,7 @@
 - 카드: `09271`. 전월 합성 원장: 2026-09-15 09271 ORDINARY 400,000원.
 - 현재 주문: 2026-10-15 GS25_STORE 50,000원, DIRECT. 선택: FUEL (2026-09-01부터). 당월 사용: 0원.
 - 후보 기대: 09271 500원. 적용 상태: 09271 APPLIED. 서비스별 09271:FUEL 0원 / 09271:BASE 500원. 기대 카드: `09271`.
-- 손계산·판정: GS25는 FUEL 대상 아님. 선택 할인 0, 일반 국내 기본 적립 50,000×1%=500. 근거: [TI_BASE](https://img2.kbcard.com/obj/card/download/09271__prdctOpmn_20240417.pdf), [TI_STORE](https://img2.kbcard.com/obj/card/download/09271__prdctOpmn_20240417.pdf), [D11](../docs/decisions.md#d-10d-12-확정-정책).
+- 손계산·판정: GS25는 FUEL 대상 아님. 선택 할인 0, 일반 국내 기본 적립 50,000×1%=500. 근거: [TI_BASE](https://img2.kbcard.com/obj/card/download/09271__prdctOpmn_20240417.pdf), [TI_STORE](https://img2.kbcard.com/obj/card/download/09271__prdctOpmn_20240417.pdf), [D11](https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/decisions.md#d-10d-12-확정-정책).
 
 ### C05. Great 한도 완전 소진
 
@@ -115,7 +116,7 @@
 - 카드: `01664`. 전월 합성 원장: 2026-09-15 01664 ORDINARY 300,000원.
 - 현재 주문: 2026-10-15 TELECOM_SKT 50,000원, AUTOPAY. 당월 사용: 0원.
 - 후보 기대: 01664 2,500원. 적용 상태: 01664 APPLIED. 기대 카드: `01664`.
-- 손계산·판정: 전월 300,000(통신 문턱 30만원), 자동납부 건당 50,000(이상이므로 정확히 5만원도 해당), 정액 2,500원·월 1회(D-10). 근거: [NO](https://img2.kbcard.com/obj/card/download/01664__prdctOpmn_20260818.pdf), [D10](../docs/decisions.md#d-10d-12-확정-정책).
+- 손계산·판정: 전월 300,000(통신 문턱 30만원), 자동납부 건당 50,000(이상이므로 정확히 5만원도 해당), 정액 2,500원·월 1회(D-10). 근거: [NO](https://img2.kbcard.com/obj/card/download/01664__prdctOpmn_20260818.pdf), [D10](https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/decisions.md#d-10d-12-확정-정책).
 
 ### C14. 노리 취소는 접수월 실적에서 차감
 
@@ -129,7 +130,7 @@
 - 카드: `01664`. 전월 합성 원장: 2026-09-15 01664 ORDINARY 300,000원.
 - 현재 주문: 2026-10-15 TELECOM_SKT 50,000원, DIRECT. 당월 사용: 0원.
 - 후보 기대: 01664 0원. 적용 상태: 01664 NOT_APPLICABLE_PAYMENT_METHOD. 기대 카드: `01664`.
-- 손계산·판정: 건당 금액·실적은 충족하나 자동납부 아님. 근거: [NO](https://img2.kbcard.com/obj/card/download/01664__prdctOpmn_20260818.pdf), [D10](../docs/decisions.md#d-10d-12-확정-정책).
+- 손계산·판정: 건당 금액·실적은 충족하나 자동납부 아님. 근거: [NO](https://img2.kbcard.com/obj/card/download/01664__prdctOpmn_20260818.pdf), [D10](https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/decisions.md#d-10d-12-확정-정책).
 
 ### C16. 첵첵 1구간 CU 정액
 
@@ -157,14 +158,14 @@
 - 카드: `01914`, `09271`. 전월 합성 원장: 2026-09-30 01914 ORDINARY 300,000원.
 - 현재 주문: 2026-10-01 CU_STORE 100,000원, DIRECT. 당월 사용: 0원.
 - 후보 기대: 01914 1,000원 / 09271 1,000원. 적용 상태: 01914 APPLIED / 09271 APPLIED. 동률: 01914, 09271 (선택 기준: 카드 ID 오름차순(임의 규칙)). 기대 카드: `01914`.
-- 손계산·판정: 9/30 실적 300,000; 10/1 주문: 첵첵 1,000 = 티타늄 1% 포인트리 1,000(D-11). 월간 총혜택·현재 주문 혜택이 같고 대표 카드가 없어 카드 ID 오름차순 01914 선택(임의 규칙, D-12). 근거: [CC](https://img2.kbcard.com/obj/card/download/01914__prdctOpmn_20260818.pdf), [TI_BASE](https://img2.kbcard.com/obj/card/download/09271__prdctOpmn_20240417.pdf), [PRD_OPT](../docs/PRD.md#fr-05-결정론적-혜택-계산과-최적화), [D11](../docs/decisions.md#d-10d-12-확정-정책), [D12](../docs/decisions.md#d-10d-12-확정-정책).
+- 손계산·판정: 9/30 실적 300,000; 10/1 주문: 첵첵 1,000 = 티타늄 1% 포인트리 1,000(D-11). 월간 총혜택·현재 주문 혜택이 같고 대표 카드가 없어 카드 ID 오름차순 01914 선택(임의 규칙, D-12). 근거: [CC](https://img2.kbcard.com/obj/card/download/01914__prdctOpmn_20260818.pdf), [TI_BASE](https://img2.kbcard.com/obj/card/download/09271__prdctOpmn_20240417.pdf), [PRD_OPT](https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/PRD.md#fr-05-결정론적-혜택-계산과-최적화), [D11](https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/decisions.md#d-10d-12-확정-정책), [D12](https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/decisions.md#d-10d-12-확정-정책).
 
 ### C20. 당장 최대와 월간 최대의 차이
 
 - 카드: `09174`, `09271`. 전월 합성 원장: 2026-09-15 09174 ORDINARY 300,000원.
 - 현재 주문: 2026-10-15 STARBUCKS_STORE 10,000원, DIRECT. 예정 소비: 2026-10-20 STARBUCKS_STORE 20,000원, DIRECT. 당월 사용: 0원.
 - 후보 기대: 09174 5,000원 / 09271 100원. 적용 상태: 09174 APPLIED / 09271 APPLIED. 월간 총혜택 10,100원. 기대 카드: `09271`.
-- 손계산·판정: 즉시 톡톡 5,000>티타늄 100. 현재 티타늄 100+미래 톡톡 10,000=10,100; 현재 톡톡 5,000+미래 톡톡 잔여 5,000=10,000. 근거: [TT](https://img2.kbcard.com/obj/card/download/09174__prdctOpmn_20260714.pdf), [TI_BASE](https://img2.kbcard.com/obj/card/download/09271__prdctOpmn_20240417.pdf), [PRD_OPT](../docs/PRD.md#fr-05-결정론적-혜택-계산과-최적화), [D11](../docs/decisions.md#d-10d-12-확정-정책).
+- 손계산·판정: 즉시 톡톡 5,000>티타늄 100. 현재 티타늄 100+미래 톡톡 10,000=10,100; 현재 톡톡 5,000+미래 톡톡 잔여 5,000=10,000. 근거: [TT](https://img2.kbcard.com/obj/card/download/09174__prdctOpmn_20260714.pdf), [TI_BASE](https://img2.kbcard.com/obj/card/download/09271__prdctOpmn_20240417.pdf), [PRD_OPT](https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/PRD.md#fr-05-결정론적-혜택-계산과-최적화), [D11](https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/decisions.md#d-10d-12-확정-정책).
 
 ## 입력 변경 시험 10개
 

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "0.1-draft",
   "status": "DRAFT_CONDITIONAL_NOT_VERIFIED",
-  "reviewStatus": "PENDING_INDEPENDENT_REVIEW_D06",
+  "reviewStatus": "PASSED_BY_USER_DECISION_D06",
   "purpose": "PRD §6: 20 standalone answer cases + 10 single-input mutations before rule-engine implementation",
   "defaults": {
     "mode": "SYNTHETIC",
@@ -1020,5 +1020,13 @@
         }
       ]
     }
-  ]
+  ],
+  "reviewRecord": {
+    "recordedAt": "2026-10-08",
+    "basis": "User requested that D-06 human cross-review be treated as passed; no reviewer identity, actual review date, or per-case human calculation record was supplied.",
+    "reviewer": null,
+    "actualReviewDate": null,
+    "evidenceProvided": false,
+    "scope": "C01-C20 and M01-M10; does not verify card rules, effective versions, or executable engine tests."
+  }
 }

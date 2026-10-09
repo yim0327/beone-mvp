@@ -3,6 +3,7 @@
   "status": "DRAFT_CONDITIONAL_NOT_VERIFIED",
   "reviewStatus": "PASSED_BY_USER_REVIEW_D06",
   "purpose": "PRD §6: 20 standalone answer cases + 10 single-input mutations before rule-engine implementation",
+  "policyBasisCommit": "55ff483ba8e61623a3a0017f49e99701af09bd5d",
   "defaults": {
     "mode": "SYNTHETIC",
     "currentAt": "2026-10-15",
@@ -26,10 +27,10 @@
     "CC": "https://img2.kbcard.com/obj/card/download/01914__prdctOpmn_20260818.pdf (pp.1-2)",
     "D03": "../docs/decisions.md#d-03d-04-확정-정책",
     "PRD_RULE": "../docs/PRD.md#fr-01-공식-약관과-규칙-데이터",
-    "PRD_OPT": "https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/PRD.md#fr-05-결정론적-혜택-계산과-최적화",
-    "D10": "https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/decisions.md#d-10d-12-확정-정책 (D-10: 노리 통신 할인은 건당 5만원 이상 2,500원 정액, 월 1회, 자동이체 등록)",
-    "D11": "https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/decisions.md#d-10d-12-확정-정책 (D-11: 티타늄 포인트리 1점=1원 혜택으로 포함)",
-    "D12": "https://github.com/yim0327/beone-mvp/blob/55ff483ba8e61623a3a0017f49e99701af09bd5d/docs/decisions.md#d-10d-12-확정-정책 (D-12: 동률 시 대표 카드, 이후 카드 ID 오름차순. 임의 규칙)"
+    "PRD_OPT": "../docs/PRD.md#fr-05-결정론적-혜택-계산과-최적화",
+    "D10": "../docs/decisions.md#d-10d-12-확정-정책 (D-10: 노리 통신 할인은 건당 5만원 이상 2,500원 정액, 월 1회, 자동이체 등록)",
+    "D11": "../docs/decisions.md#d-10d-12-확정-정책 (D-11: 티타늄 포인트리 1점=1원 혜택으로 포함)",
+    "D12": "../docs/decisions.md#d-10d-12-확정-정책 (D-12: 동률 시 대표 카드, 이후 카드 ID 오름차순. 임의 규칙)"
   },
   "cases": [
     {

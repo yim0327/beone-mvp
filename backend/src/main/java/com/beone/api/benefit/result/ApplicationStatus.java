@@ -3,43 +3,42 @@ package com.beone.api.benefit.result;
 import com.beone.api.benefit.money.BenefitAmount;
 
 /**
- * Why a benefit applied or did not apply, for a card or one of its services. Codes match the
- * evaluation fixture; {@code NO_VERIFIED_RULE} is named in the casebook and
- * {@code NEEDS_CONFIRMATION} is the {@code 확인 필요} state of D-05.
+ * 카드 또는 서비스의 혜택 적용 여부와 사유.
+ * 평가 fixture 코드와 같고, {@code NO_VERIFIED_RULE}은 사례집, {@code NEEDS_CONFIRMATION}은 D-05의 {@code 확인 필요}에 근거한다.
  */
 public enum ApplicationStatus {
 
-	/** A benefit above 0 won applies. */
+	/** 0원보다 큰 혜택이 적용됨. */
 	APPLIED(AmountShape.POSITIVE),
 
-	/** A benefit above 0 won applies but the formula amount was cut by the remaining limit. */
+	/** 0원보다 큰 혜택이 적용됐지만 잔여 한도 때문에 산식 금액보다 줄어듦. */
 	APPLIED_CAP_REMAINING(AmountShape.POSITIVE),
 
-	/** The applicable limit is already used up. */
+	/** 해당 한도를 이미 모두 사용함. */
 	LIMIT_EXHAUSTED(AmountShape.ZERO),
 
-	/** The transaction is excluded by the terms. */
+	/** 약관상 제외 거래. */
 	NOT_APPLICABLE_EXCLUDED(AmountShape.ZERO),
 
-	/** The merchant class is not a target. */
+	/** 대상 업종이 아님. */
 	NOT_APPLICABLE_CATEGORY(AmountShape.ZERO),
 
-	/** Prior-month performance is below the threshold. */
+	/** 전월 실적이 기준에 못 미침. */
 	NOT_APPLICABLE_PERFORMANCE(AmountShape.ZERO),
 
-	/** The amount is below the per-transaction minimum. */
+	/** 건당 최소 금액에 못 미침. */
 	NOT_APPLICABLE_MIN_AMOUNT(AmountShape.ZERO),
 
-	/** The payment method does not qualify. */
+	/** 결제 방식이 대상이 아님. */
 	NOT_APPLICABLE_PAYMENT_METHOD(AmountShape.ZERO),
 
-	/** No rule version covers the decision date. */
+	/** 판정일에 유효한 규칙 버전이 없음. */
 	RULE_EXPIRED(AmountShape.UNCONFIRMED),
 
-	/** A covering rule exists but none is selectable in the context, or the card has no rule. */
+	/** 판정일에 유효한 버전 중 {@code VERIFIED}가 없거나 카드에 규칙이 없음. */
 	NO_VERIFIED_RULE(AmountShape.UNCONFIRMED),
 
-	/** A required state or rule term is unresolved (D-05). */
+	/** 필수 상태나 규칙 조건이 미확정임(D-05). */
 	NEEDS_CONFIRMATION(AmountShape.UNCONFIRMED);
 
 	private final AmountShape amountShape;
@@ -49,8 +48,8 @@ public enum ApplicationStatus {
 	}
 
 	/**
-	 * Whether the amount agrees with this status: applied statuses need a confirmed amount above
-	 * 0, not-applicable statuses a confirmed 0, and rule or state gaps an unconfirmed amount.
+	 * 상태와 금액이 맞는지 확인한다.
+	 * 적용 상태는 0원보다 큰 확정 금액, 미적용 상태는 확정 0원, 규칙·상태 공백은 미확정 금액이어야 한다.
 	 */
 	public boolean isConsistentWith(BenefitAmount amount) {
 		return switch (amountShape) {

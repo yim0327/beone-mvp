@@ -1,14 +1,14 @@
 package com.beone.api.benefit.input;
 
 /**
- * Card selection mode set before payment (PRD §4.1).
+ * 결제 전에 정하는 카드 선택 방식(PRD §4.1).
  */
 public enum SelectionMode {
 
-	/** The engine selects the card with the largest monthly benefit. */
+	/** 엔진이 월간 총혜택이 가장 큰 카드를 고른다. */
 	AUTO_RECOMMEND,
 
-	/** The representative card is always used; the engine still shows the difference. */
+	/** 대표 카드를 항상 사용한다. 엔진은 최적 카드와의 차이를 함께 보여 준다. */
 	FIXED_REPRESENTATIVE
 
 }

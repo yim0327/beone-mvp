@@ -1,8 +1,8 @@
 package com.beone.api.benefit.card;
 
 /**
- * Confirmed merchant or business-category classification such as {@code STARBUCKS_STORE}. It is
- * an input the user or a scenario confirmed; it is never inferred from a similar merchant name.
+ * 사용자나 시나리오가 확인한 가맹점·업종 분류(예: {@code STARBUCKS_STORE}).
+ * 비슷한 가맹점 이름으로 추정한 값을 넣지 않는다.
  */
 public record MerchantClass(String code) {
 

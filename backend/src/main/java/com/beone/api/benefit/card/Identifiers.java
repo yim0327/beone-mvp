@@ -1,5 +1,8 @@
 package com.beone.api.benefit.card;
 
+/**
+ * 식별자 값 객체의 공통 검증. 빈 값과 공백이 들어간 값을 거부한다.
+ */
 final class Identifiers {
 
 	private Identifiers() {

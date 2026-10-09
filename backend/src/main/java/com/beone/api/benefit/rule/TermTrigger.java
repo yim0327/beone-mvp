@@ -1,30 +1,29 @@
 package com.beone.api.benefit.rule;
 
 /**
- * The input situation in which an unresolved conditional term changes the result. While that
- * situation cannot be ruled out, the term must be treated as needed.
+ * 미확정 조건부 조건이 결과에 영향을 주는 입력 상황.
+ * 이 상황이 없다고 확인되기 전까지는 조건이 필요한 것으로 본다.
  */
 public enum TermTrigger {
 
 	/**
-	 * A cancellation that may be attributed to the performance window: received in it, cancelling
-	 * a transaction in it, or with an unknown original date (cancellation attribution, D-03).
+	 * 실적 기간에 귀속될 수 있는 취소: 실적 기간에 접수됐거나, 실적 기간 거래를 취소했거나, 원거래일을 모르는 취소(취소 귀속월, D-03).
 	 */
 	CANCELLATION_AFFECTING_PERFORMANCE_WINDOW,
 
-	/** A sale that received a discount within the performance window (performance exclusion). */
+	/** 실적 기간 안에 할인받은 매출이 있음(실적 제외). */
 	BENEFITED_SALE_IN_PERFORMANCE_WINDOW,
 
-	/** Two or more transactions consuming the same limit in one period (deduction order, D-03). */
+	/** 같은 기간에 같은 한도를 쓰는 거래가 둘 이상 있음(한도 차감 순서, D-03). */
 	SHARED_LIMIT_CONSUMPTION,
 
-	/** The card is within a new-card grace span (D-03). */
+	/** 카드가 신규 유예 기간 안에 있음(D-03). */
 	WITHIN_NEW_CARD_GRACE,
 
-	/** Two or more services qualify on the same transaction (stacking, PRD FR-05). */
+	/** 한 거래에 둘 이상의 서비스가 해당됨(중복 허용, PRD FR-05). */
 	MULTIPLE_SERVICES_QUALIFY,
 
-	/** A rate calculation yields an amount below 1 won (sub-won handling, D-03). */
+	/** 요율 계산 결과에 원 미만 금액이 생김(원 미만 처리, D-03). */
 	FRACTIONAL_WON_RESULT
 
 }

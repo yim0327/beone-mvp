@@ -14,14 +14,14 @@ import com.beone.api.benefit.money.BenefitAmount;
 import com.beone.api.benefit.rule.RuleVersionRef;
 
 /**
- * Result for one candidate card.
+ * 후보 카드 한 장의 결과.
  *
- * @param appliedRule rule version used; empty only when no rule could be used
- * @param status card-level application status
- * @param currentOrderBenefit benefit on the current order
- * @param monthlyTotal expected monthly benefit when the current order goes to this card
- * @param services per-service benefits on the current order
- * @param remainingLimits remaining monthly limit by bucket after the current order
+ * @param appliedRule 사용한 규칙 버전. 쓸 수 있는 규칙이 없을 때만 비어 있다
+ * @param status 카드 단위 적용 상태
+ * @param currentOrderBenefit 현재 주문의 혜택
+ * @param monthlyTotal 현재 주문을 이 카드로 결제할 때의 월간 총예상 혜택
+ * @param services 현재 주문의 서비스별 혜택
+ * @param remainingLimits 현재 주문 뒤 한도 묶음별 잔여 한도
  */
 public record CardBenefit(CardId cardId, Optional<RuleVersionRef> appliedRule, ApplicationStatus status,
 		BenefitAmount currentOrderBenefit, BenefitAmount monthlyTotal, List<ServiceBenefit> services,

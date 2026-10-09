@@ -9,9 +9,11 @@ import java.util.Set;
 import com.beone.api.benefit.card.CardId;
 
 /**
- * Everything one recommendation is computed from.
+ * 추천 한 번에 필요한 입력 전체.
  *
- * @param referenceDate the clock date the state is judged at; the order may be later
+ * 생성 시 보유 카드 중복, 비보유 카드의 월간 상태, 보유하지 않은 대표 카드를 거부한다.
+ *
+ * @param referenceDate 상태를 판단하는 기준일(시나리오 시계). 주문일은 이보다 늦을 수 있다
  */
 public record RecommendationInput(LocalDate referenceDate, Order order, List<HeldCard> cards, Ledger ledger,
 		List<CardMonthlyState> states, PlannedSpendings plannedSpendings, SelectionPreference preference) {

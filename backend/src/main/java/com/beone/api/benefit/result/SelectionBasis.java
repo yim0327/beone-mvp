@@ -1,20 +1,20 @@
 package com.beone.api.benefit.result;
 
 /**
- * The D-12 step that decided the selected card.
+ * 선택 카드를 결정한 D-12 단계.
  */
 public enum SelectionBasis {
 
-	/** Step 1: largest total expected monthly benefit. */
+	/** 1단계: 월간 총예상 혜택이 가장 큼. */
 	MONTHLY_TOTAL(false),
 
-	/** Step 2: largest benefit on the current order. */
+	/** 2단계: 현재 주문 혜택이 가장 큼. */
 	CURRENT_ORDER_BENEFIT(false),
 
-	/** Step 3: the user's representative card among the tied cards. Arbitrary rule. */
+	/** 3단계: 동률 카드 중 사용자가 지정한 대표 카드. 임의 규칙. */
 	REPRESENTATIVE_CARD(true),
 
-	/** Step 4: card ID string ascending. Arbitrary rule. */
+	/** 4단계: 카드 ID 문자열 오름차순. 임의 규칙. */
 	CARD_ID_ASC(true);
 
 	private final boolean arbitrary;
@@ -24,7 +24,7 @@ public enum SelectionBasis {
 	}
 
 	/**
-	 * True for steps that do not mean the selected card is better (D-12).
+	 * 선택된 카드가 더 낫다는 뜻이 아닌 단계면 참(D-12).
 	 */
 	public boolean isArbitrary() {
 		return arbitrary;

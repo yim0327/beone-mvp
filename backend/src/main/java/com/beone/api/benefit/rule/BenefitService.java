@@ -13,22 +13,20 @@ import com.beone.api.benefit.card.ServiceId;
 import com.beone.api.benefit.money.Won;
 
 /**
- * One benefit service of a card rule, such as the 09271 base accrual or the 09174 Great
- * discount.
+ * 카드 규칙의 혜택 서비스 하나(예: 09271 기본 적립, 09174 Great 할인).
  *
- * @param id service identifier within the rule
- * @param kind point accrual or billing discount (D-11)
- * @param target merchants the service targets
- * @param excludedClasses merchant classes excluded from the benefit
- * @param paymentMethods payment methods that qualify; listed explicitly
- * @param minimumAmount minimum amount per transaction; zero when the terms state none
- * @param maximumTargetAmount per-transaction amount above which the excess is not discounted
- * @param tiers calculation by prior-month performance, strictly ascending
- * @param limitBuckets limits the benefit consumes; empty when the terms state no limit
- * @param requiresSelection true for an opt-in service the user must have selected (09271)
- * @param stackableWith services this one may be combined with on the same transaction; resolved
- * empty means only the largest single benefit applies (PRD FR-05)
- * @param fractionalWon handling of amounts below 1 won
+ * @param id 규칙 안의 서비스 식별자
+ * @param kind 포인트 적립 또는 청구 할인(D-11)
+ * @param target 대상 가맹점
+ * @param excludedClasses 혜택에서 제외하는 업종
+ * @param paymentMethods 대상 결제 방식. 명시적으로 나열한다
+ * @param minimumAmount 건당 최소 금액. 약관에 없으면 0원
+ * @param maximumTargetAmount 건당 할인 대상 금액 상한. 초과분은 할인하지 않는다
+ * @param tiers 전월 실적 구간별 계산 방식. 최소 실적 오름차순
+ * @param limitBuckets 혜택이 차감하는 한도. 약관에 한도가 없으면 비어 있다
+ * @param requiresSelection 사용자가 선택해야 적용되는 선택형 서비스면 참(09271)
+ * @param stackableWith 같은 거래에서 함께 받을 수 있는 서비스. 빈 집합이면 가장 큰 단일 혜택만 적용한다(PRD FR-05)
+ * @param fractionalWon 원 미만 금액 처리 방식
  */
 public record BenefitService(ServiceId id, BenefitKind kind, MerchantTarget target, Set<MerchantClass> excludedClasses,
 		Set<PaymentMethod> paymentMethods, Won minimumAmount, Optional<Won> maximumTargetAmount,
@@ -68,16 +66,14 @@ public record BenefitService(ServiceId id, BenefitKind kind, MerchantTarget targ
 	}
 
 	/**
-	 * True when the calculation depends on prior-month performance: more than one tier, or a
-	 * single tier above 0 won.
+	 * 계산이 전월 실적에 따라 달라지면 참. 구간이 둘 이상이거나 단일 구간의 최소 실적이 0원보다 크면 해당한다.
 	 */
 	public boolean hasPerformanceRequirement() {
 		return tiers.size() > 1 || tiers.get(0).minimumPerformance().isPositive();
 	}
 
 	/**
-	 * Reasons the calculation itself is unresolved. A service with any such reason is never
-	 * calculable.
+	 * 계산식 자체가 미확정인 사유. 하나라도 있으면 이 서비스는 계산하지 않는다.
 	 */
 	public List<String> unresolvedCalculationReasons() {
 		return tiers.stream()
@@ -88,7 +84,7 @@ public record BenefitService(ServiceId id, BenefitKind kind, MerchantTarget targ
 	}
 
 	/**
-	 * Unresolved terms that only matter for some inputs (stacking, sub-won handling).
+	 * 입력에 따라서만 필요한 미확정 조건(중복 허용, 원 미만 처리).
 	 */
 	public List<ConditionalTerm> unresolvedConditionalTerms() {
 		List<ConditionalTerm> unresolved = new ArrayList<>();

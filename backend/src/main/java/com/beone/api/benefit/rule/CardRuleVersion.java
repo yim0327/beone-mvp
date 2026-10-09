@@ -15,12 +15,12 @@ import com.beone.api.benefit.card.LimitBucketId;
 import com.beone.api.benefit.card.ServiceId;
 
 /**
- * One versioned rule of a card product (PRD FR-01).
+ * 카드 상품의 버전 있는 규칙(PRD FR-01).
  *
  * <p>
- * {@code evaluationOnly} marks a rule snapshot that exists only as evaluation data, such as the
- * fixture's C02 snapshot. It is never {@code VERIFIED}, so {@link RuleCatalog} never selects it.
- * Selecting or running evaluation-only rules belongs to a later evaluation harness.
+ * {@code evaluationOnly}는 fixture C02처럼 평가 자료로만 존재하는 규칙 스냅샷을 표시한다.
+ * 이런 규칙은 {@code VERIFIED}가 될 수 없으므로 {@link RuleCatalog}가 선택하지 않는다.
+ * 평가 전용 규칙의 선택·실행은 후속 평가 하네스에서 다룬다.
  */
 public record CardRuleVersion(CardId cardId, String ruleVersion, ValidityPeriod validity, VerificationStatus status,
 		boolean evaluationOnly, List<OfficialSource> sources, RulePolicy policy, List<BenefitService> services,
@@ -37,6 +37,7 @@ public record CardRuleVersion(CardId cardId, String ruleVersion, ValidityPeriod 
 		Objects.requireNonNull(policy, "policy");
 		services = List.copyOf(services);
 		limitBuckets = List.copyOf(limitBuckets);
+		// VERIFIED 규칙은 평가 전용일 수 없고 공식 출처와 서비스가 있어야 한다.
 		if (status == VerificationStatus.VERIFIED) {
 			if (evaluationOnly) {
 				throw new IllegalArgumentException("a VERIFIED rule cannot be evaluation-only");
@@ -48,6 +49,7 @@ public record CardRuleVersion(CardId cardId, String ruleVersion, ValidityPeriod 
 				throw new IllegalArgumentException("a VERIFIED rule needs at least one benefit service");
 			}
 		}
+		// 서비스·한도 식별자 중복과 존재하지 않는 참조, 상위 한도 순환을 거부한다.
 		Map<ServiceId, BenefitService> servicesById = uniqueBy(services, BenefitService::id, "service");
 		Map<LimitBucketId, LimitBucket> bucketsById = uniqueBy(limitBuckets, LimitBucket::id, "limit bucket");
 		for (BenefitService service : services) {
@@ -109,17 +111,15 @@ public record CardRuleVersion(CardId cardId, String ruleVersion, ValidityPeriod 
 	}
 
 	/**
-	 * Reasons a service cannot be calculated from this rule alone. Empty means calculable.
+	 * 이 규칙만으로 서비스를 계산할 수 없는 사유. 비어 있으면 계산할 수 있다.
 	 *
 	 * <ul>
-	 * <li>its calculation is unresolved;</li>
-	 * <li>it or any limit it consumes (including parent limits) depends on performance and the
-	 * performance window or date basis is unresolved;</li>
-	 * <li>it consumes a limit and the limit period is unresolved.</li>
+	 * <li>계산식이 미확정이다.</li>
+	 * <li>서비스나 서비스가 쓰는 한도(상위 한도 포함)가 실적에 따라 달라지는데 실적 기간이나 거래 기준일이 미확정이다.</li>
+	 * <li>한도가 있는데 한도 기간이 미확정이다.</li>
 	 * </ul>
-	 * Terms that matter only for some inputs (cancellation attribution, benefited-sale exclusion,
-	 * deduction order, grace, stacking, sub-won handling) are reported by
-	 * {@link #unresolvedConditionalTerms()} instead.
+	 * 입력에 따라서만 필요한 조건(취소 귀속, 할인 매출 실적 제외, 차감 순서, 유예, 중복, 원 미만 처리)은
+	 * {@link #unresolvedConditionalTerms()}로 따로 넘긴다.
 	 */
 	public List<String> blockingReasons(BenefitService service) {
 		List<String> reasons = new ArrayList<>(service.unresolvedCalculationReasons());
@@ -142,8 +142,8 @@ public record CardRuleVersion(CardId cardId, String ruleVersion, ValidityPeriod 
 	}
 
 	/**
-	 * Unresolved rule-wide and service terms that only matter for some inputs. See
-	 * {@link ConditionalTerm} for when one may be disregarded.
+	 * 입력에 따라서만 필요한 규칙·서비스 단위의 미확정 조건.
+	 * 무시할 수 있는 경우는 {@link ConditionalTerm}을 따른다.
 	 */
 	public List<ConditionalTerm> unresolvedConditionalTerms() {
 		List<ConditionalTerm> unresolved = new ArrayList<>();
@@ -161,7 +161,7 @@ public record CardRuleVersion(CardId cardId, String ruleVersion, ValidityPeriod 
 	}
 
 	/**
-	 * Limit buckets a service consumes, including every parent (integrated) limit.
+	 * 서비스가 차감하는 한도 묶음. 상위(통합) 한도까지 모두 포함한다.
 	 */
 	public List<LimitBucket> limitChain(BenefitService service) {
 		List<LimitBucket> chain = new ArrayList<>();

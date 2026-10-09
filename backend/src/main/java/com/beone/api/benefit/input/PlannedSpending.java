@@ -10,8 +10,7 @@ import com.beone.api.benefit.card.PaymentMethod;
 import com.beone.api.benefit.money.Won;
 
 /**
- * A spending the user confirmed they plan to make (PRD FR-04). Dates follow the same rule as
- * {@link Order}.
+ * 사용자가 확인한 예정 소비(PRD FR-04). 날짜·시각 규칙은 {@link Order}와 같다.
  */
 public record PlannedSpending(LocalDate date, Optional<LocalTime> time, Won amount, MerchantClass merchantClass,
 		Optional<String> merchantName, PaymentMethod paymentMethod) {

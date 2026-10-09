@@ -5,7 +5,7 @@ import java.util.Objects;
 import com.beone.api.benefit.card.CardId;
 
 /**
- * Points to one rule version of one card, for results and inferred state.
+ * 카드의 규칙 버전 하나를 가리킨다. 결과와 산출 상태값에서 사용한다.
  */
 public record RuleVersionRef(CardId cardId, String ruleVersion) {
 

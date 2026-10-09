@@ -15,7 +15,7 @@ import com.beone.api.benefit.card.TransactionNature;
 import com.beone.api.benefit.money.Won;
 
 /**
- * Builders for rule-shaped test data. Values are synthetic and assert nothing about real terms.
+ * 규칙 형태의 테스트 데이터 생성 도구. 값은 합성이며 실제 약관을 주장하지 않는다.
  */
 final class RuleTestData {
 

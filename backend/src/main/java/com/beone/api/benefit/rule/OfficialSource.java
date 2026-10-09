@@ -4,7 +4,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Official document a rule is based on, with an optional page or section locator.
+ * 규칙의 근거가 되는 공식 문서. 쪽이나 항목 위치는 선택 값이다.
  */
 public record OfficialSource(String uri, Optional<String> locator) {
 

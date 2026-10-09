@@ -1,11 +1,11 @@
 package com.beone.api.benefit.rule;
 
 /**
- * Period a monthly benefit limit applies to. Other periods stay unresolved (PRD FR-02, D-03).
+ * 월 혜택 한도가 적용되는 기간. 다른 기간은 미확정 조건으로 남긴다(PRD FR-02, D-03).
  */
 public enum LimitPeriod {
 
-	/** The 1st to the last day of the month, without carry-over. */
+	/** 매월 1일부터 말일까지. 이월하지 않는다. */
 	CALENDAR_MONTH
 
 }

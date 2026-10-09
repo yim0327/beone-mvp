@@ -7,14 +7,14 @@ import java.util.Optional;
 import com.beone.api.benefit.rule.RuleVersionRef;
 
 /**
- * A state value with its source, basis period and refresh time (D-04).
+ * 출처, 기준 기간, 갱신 시각을 함께 갖는 상태값(D-04).
  *
  * <ul>
- * <li>{@code UNKNOWN} carries no value; the basis period may also be unknown.</li>
- * <li>Every other source carries a value and a basis period.</li>
- * <li>{@code CODEF}, {@code MANUAL} and {@code INFERRED} require the refresh time.
- * {@code SYNTHETIC} may omit it so scenario data does not invent a time.</li>
- * <li>{@code INFERRED} requires the rule version it was computed with.</li>
+ * <li>{@code UNKNOWN}은 값이 없고 기준 기간도 모를 수 있다.</li>
+ * <li>그 밖의 출처는 값과 기준 기간이 필수다.</li>
+ * <li>{@code CODEF}, {@code MANUAL}, {@code INFERRED}는 갱신 시각이 필수다.
+ * {@code SYNTHETIC}은 시나리오 데이터에 없는 시각을 만들지 않도록 생략할 수 있다.</li>
+ * <li>{@code INFERRED}는 산출에 쓴 규칙 버전이 필수다.</li>
  * </ul>
  */
 public final class StateValue<T> {
@@ -87,8 +87,8 @@ public final class StateValue<T> {
 	}
 
 	/**
-	 * Returns the value.
-	 * @throws IllegalStateException if the state is {@code UNKNOWN}
+	 * 값을 반환한다.
+	 * @throws IllegalStateException 상태가 {@code UNKNOWN}인 경우
 	 */
 	public T knownValue() {
 		if (!isKnown()) {

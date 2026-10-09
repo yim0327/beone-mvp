@@ -9,8 +9,8 @@ import com.beone.api.benefit.rule.TriggerEvidence;
 import com.beone.api.benefit.state.BasisPeriod;
 
 /**
- * Transactions of one ledger source with the periods known to be complete. Transactions of cards
- * that are not held are allowed and ignored by comparison (evaluation casebook M10).
+ * 한 출처의 원장 거래와 완전하다고 선언된 기간.
+ * 보유하지 않은 카드의 거래도 받아 두며, 비교할 때는 제외한다(사례집 M10).
  */
 public record Ledger(LedgerSource source, List<LedgerTransaction> transactions, List<LedgerCoverage> completePeriods) {
 
@@ -21,8 +21,8 @@ public record Ledger(LedgerSource source, List<LedgerTransaction> transactions, 
 	}
 
 	/**
-	 * True when every day of {@code period} is inside some declared complete period of the card.
-	 * Adjacent declarations combine; undeclared days make the period incomplete.
+	 * 기간의 모든 날짜가 그 카드의 완전 기간 선언 안에 있으면 참.
+	 * 인접한 선언은 이어서 보고, 선언되지 않은 날이 하나라도 있으면 불완전하다.
 	 */
 	public boolean isComplete(CardId cardId, BasisPeriod period) {
 		for (LocalDate day = period.from(); !day.isAfter(period.to()); day = day.plusDays(1)) {
@@ -37,19 +37,16 @@ public record Ledger(LedgerSource source, List<LedgerTransaction> transactions, 
 	}
 
 	/**
-	 * Evidence for {@link com.beone.api.benefit.rule.TermTrigger#CANCELLATION_AFFECTING_PERFORMANCE_WINDOW}
-	 * when the cancellation attribution is unresolved.
+	 * 취소 실적 귀속월이 미확정일 때 쓰는 {@link com.beone.api.benefit.rule.TermTrigger#CANCELLATION_AFFECTING_PERFORMANCE_WINDOW} 근거.
 	 *
 	 * <ol>
-	 * <li>{@code PRESENT} if a cancellation of the card was received in the window or cancels a
-	 * transaction dated in it.</li>
-	 * <li>{@code UNDETERMINED} unless the ledger is complete from the window start to
-	 * {@code asOf}, because a cancellation received later could still belong to the window.</li>
-	 * <li>{@code UNDETERMINED} if a cancellation received after the window has no original date.</li>
-	 * <li>{@code CONFIRMED_ABSENT} otherwise.</li>
+	 * <li>실적 기간에 접수됐거나 실적 기간의 거래를 취소한 건이 있으면 {@code PRESENT}</li>
+	 * <li>실적 기간 시작일부터 {@code asOf}까지 원장이 완전하지 않으면 {@code UNDETERMINED}. 나중에 접수된 취소가 실적 기간 거래의 취소일 수 있다.</li>
+	 * <li>실적 기간 뒤에 접수된 취소 중 원거래일을 모르는 건이 있으면 {@code UNDETERMINED}</li>
+	 * <li>그 밖에는 {@code CONFIRMED_ABSENT}</li>
 	 * </ol>
 	 *
-	 * @param asOf last date whose cancellations can affect the result, not before the window end
+	 * @param asOf 결과에 영향을 줄 수 있는 마지막 날짜. 실적 기간 종료일보다 앞설 수 없다
 	 */
 	public TriggerEvidence cancellationEvidence(CardId cardId, BasisPeriod window, LocalDate asOf) {
 		Objects.requireNonNull(cardId, "cardId");

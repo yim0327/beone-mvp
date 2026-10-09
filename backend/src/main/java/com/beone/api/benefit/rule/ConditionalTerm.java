@@ -3,18 +3,16 @@ package com.beone.api.benefit.rule;
 import java.util.Objects;
 
 /**
- * An unresolved rule term that only changes the result when its trigger occurs.
+ * 영향 상황이 생길 때만 결과를 바꾸는 미확정 규칙 조건.
  *
  * <p>
- * Contract: the term may be disregarded only when the evidence is
- * {@link TriggerEvidence#CONFIRMED_ABSENT}. With {@code PRESENT} or {@code UNDETERMINED} the
- * affected benefit stays {@code 확인 필요} (D-03, D-05). Missing evidence is
- * {@code UNDETERMINED}, never absence.
+ * 계약: 근거가 {@link TriggerEvidence#CONFIRMED_ABSENT}일 때만 무시할 수 있다.
+ * {@code PRESENT}나 {@code UNDETERMINED}이면 해당 혜택은 {@code 확인 필요}로 남는다(D-03, D-05).
+ * 근거가 없으면 {@code UNDETERMINED}로 보며, 영향이 없다고 보지 않는다.
  *
- * @param name term name, prefixed with the service id for service terms (e.g.
- * {@code BASE.fractionalWon})
- * @param reason why the term is unresolved
- * @param trigger situation in which the term matters
+ * @param name 조건 이름. 서비스 조건은 서비스 ID를 앞에 붙인다(예: {@code BASE.fractionalWon})
+ * @param reason 미확정 사유
+ * @param trigger 조건이 결과에 영향을 주는 상황
  */
 public record ConditionalTerm(String name, String reason, TermTrigger trigger) {
 

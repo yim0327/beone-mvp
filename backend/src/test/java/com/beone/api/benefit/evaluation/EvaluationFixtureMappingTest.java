@@ -34,8 +34,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * Checks that the model represents every input and expected result of the evaluation fixture
- * (issue #15). Nothing here calculates a benefit.
+ * 평가 fixture의 모든 입력과 기대 결과를 모델로 표현할 수 있는지 확인한다(이슈 #15).
+ * 혜택은 계산하지 않는다.
  */
 class EvaluationFixtureMappingTest {
 
@@ -132,8 +132,8 @@ class EvaluationFixtureMappingTest {
 		assertThat(byId.values()).filteredOn(s -> !s.ruleSnapshots().isEmpty())
 			.extracting(EvaluationScenario::id)
 			.containsExactly("C02");
-		// Cases without a snapshot assume a candidate rule valid on the order date. The fixture does
-		// not define those rules, so an evaluation harness must supply them; this mapping does not.
+		// ruleSnapshot이 없는 사례는 주문일에 유효한 후보 규칙을 전제한다.
+		// fixture에 그 규칙이 정의돼 있지 않으므로 평가 하네스가 따로 제공해야 하며, 이 매핑은 만들지 않는다.
 		assertThat(fixture.defaultNotes().get("ruleApplicability"))
 			.contains("Cases without ruleSnapshot assume a rule snapshot that is valid on the order date");
 	}

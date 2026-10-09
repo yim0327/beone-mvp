@@ -5,11 +5,11 @@ import java.util.Objects;
 import com.beone.api.benefit.money.Won;
 
 /**
- * Calculation method of one benefit tier: a rate in basis points or a fixed amount.
+ * 혜택 구간의 계산 방식. 베이시스 포인트 요율 또는 정액.
  */
 public sealed interface BenefitCalculation {
 
-	/** 100% expressed in basis points. */
+	/** 100%를 베이시스 포인트로 표현한 값. */
 	int FULL_RATE_BASIS_POINTS = 10_000;
 
 	static Rate rate(int basisPoints) {
@@ -21,8 +21,7 @@ public sealed interface BenefitCalculation {
 	}
 
 	/**
-	 * Rate in basis points, e.g. 1% = 100 and 50% = 5,000. Integer only so no floating point is
-	 * involved.
+	 * 베이시스 포인트 요율(예: 1% = 100, 50% = 5,000). 부동소수점을 쓰지 않도록 정수로 둔다.
 	 */
 	record Rate(int basisPoints) implements BenefitCalculation {
 
@@ -34,7 +33,7 @@ public sealed interface BenefitCalculation {
 
 	}
 
-	/** Fixed amount per qualifying transaction, e.g. 2,500 won (D-10). */
+	/** 대상 거래 한 건당 정액(예: 2,500원, D-10). */
 	record FixedAmount(Won amount) implements BenefitCalculation {
 
 		public FixedAmount {

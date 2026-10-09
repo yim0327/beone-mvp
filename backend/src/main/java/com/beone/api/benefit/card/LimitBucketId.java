@@ -1,8 +1,8 @@
 package com.beone.api.benefit.card;
 
 /**
- * Identifier of a monthly benefit limit within a card rule, such as {@code Great} or
- * {@code CU_AREA}. Compared exactly as written; case is not normalized.
+ * 카드 규칙 안의 월 혜택 한도 식별자(예: {@code Great}, {@code CU_AREA}).
+ * 대소문자를 바꾸지 않고 적힌 그대로 비교한다.
  */
 public record LimitBucketId(String value) {
 

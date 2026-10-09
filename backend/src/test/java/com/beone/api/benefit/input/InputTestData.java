@@ -14,6 +14,9 @@ import com.beone.api.benefit.state.BasisPeriod;
 import com.beone.api.benefit.state.StateSource;
 import com.beone.api.benefit.state.StateValue;
 
+/**
+ * 입력 모델 테스트용 합성 데이터 생성 도구.
+ */
 final class InputTestData {
 
 	static final LocalDate ORDER_DATE = LocalDate.of(2026, 10, 15);

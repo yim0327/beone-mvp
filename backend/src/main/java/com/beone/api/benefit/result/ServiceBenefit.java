@@ -6,7 +6,7 @@ import com.beone.api.benefit.card.ServiceId;
 import com.beone.api.benefit.money.BenefitAmount;
 
 /**
- * Benefit of one service of a card on the current order.
+ * 현재 주문에서 카드의 서비스 하나가 주는 혜택.
  */
 public record ServiceBenefit(ServiceId serviceId, ApplicationStatus status, BenefitAmount amount) {
 

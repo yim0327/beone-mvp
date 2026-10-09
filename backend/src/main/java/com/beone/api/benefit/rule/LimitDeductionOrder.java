@@ -1,15 +1,14 @@
 package com.beone.api.benefit.rule;
 
 /**
- * Order in which transactions consume a monthly limit (D-03). Purchase order is never replaced
- * by approval order when it is unknown.
+ * 거래가 월 한도를 차감하는 순서(D-03). 매입순서를 모를 때 승인순서로 대신하지 않는다.
  */
 public enum LimitDeductionOrder {
 
-	/** In order of approval. */
+	/** 승인 순서. */
 	APPROVAL_ORDER,
 
-	/** In order of purchase slips (01914). */
+	/** 전표 매입 순서(01914). */
 	PURCHASE_ORDER
 
 }

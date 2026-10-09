@@ -1,22 +1,22 @@
 package com.beone.api.benefit.rule;
 
 /**
- * What the input and ledger show about a {@link TermTrigger}.
+ * 입력과 원장으로 확인한 {@link TermTrigger} 발생 여부.
  */
 public enum TriggerEvidence {
 
-	/** The trigger occurs, so the term is needed. */
+	/** 영향 상황이 있음. 조건이 필요하다. */
 	PRESENT,
 
 	/**
-	 * Complete inputs show the trigger does not occur. This is the only evidence that lets an
-	 * unresolved conditional term be disregarded.
+	 * 완전한 입력으로 영향 상황이 없음을 확인함.
+	 * 미확정 조건부 조건을 무시할 수 있는 유일한 근거다.
 	 */
 	CONFIRMED_ABSENT,
 
 	/**
-	 * Inputs are incomplete or unknown, so the trigger cannot be ruled out. Treated like
-	 * {@link #PRESENT}; this is also the evidence to use when nothing was checked.
+	 * 입력이 불완전하거나 알 수 없어 영향 상황을 배제할 수 없음.
+	 * {@link #PRESENT}와 같이 취급하며, 확인하지 않은 경우에도 이 값을 쓴다.
 	 */
 	UNDETERMINED
 

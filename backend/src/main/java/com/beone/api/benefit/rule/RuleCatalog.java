@@ -13,19 +13,17 @@ import com.beone.api.benefit.card.ServiceId;
 import com.beone.api.benefit.result.ApplicationStatus;
 
 /**
- * Rule versions of all cards and the {@code VERIFIED} rule that applies on a decision date
- * (PRD FR-01).
+ * 모든 카드의 규칙 버전을 보관하고, 판정일에 적용할 {@code VERIFIED} 규칙을 고른다(PRD FR-01).
  *
  * <p>
- * Selection checks the validity period first, then verification (Q1 of issue #15):
+ * 기간을 먼저 보고 검증 상태를 나중에 본다(이슈 #15 Q1).
  * <ol>
- * <li>no version for the card: {@code NO_VERIFIED_RULE};</li>
- * <li>no version covers the date: {@code RULE_EXPIRED};</li>
- * <li>a covering version exists but none is {@code VERIFIED}: {@code NO_VERIFIED_RULE};</li>
- * <li>otherwise the single {@code VERIFIED} covering version.</li>
+ * <li>카드에 규칙 버전이 없으면 {@code NO_VERIFIED_RULE}</li>
+ * <li>판정일을 포함하는 버전이 없으면 {@code RULE_EXPIRED}</li>
+ * <li>포함하는 버전은 있지만 {@code VERIFIED}가 없으면 {@code NO_VERIFIED_RULE}</li>
+ * <li>그 밖에는 해당 {@code VERIFIED} 버전을 선택</li>
  * </ol>
- * Only {@code VERIFIED} rules are ever selected. Candidates, AI drafts and evaluation-only
- * snapshots are kept for representation and never selected here.
+ * {@code VERIFIED}가 아닌 후보, AI 초안, 평가 전용 스냅샷은 표현용으로만 보관하고 선택하지 않는다.
  */
 public final class RuleCatalog {
 
@@ -59,16 +57,19 @@ public final class RuleCatalog {
 	public RuleSelection select(CardId cardId, LocalDate decisionDate) {
 		Objects.requireNonNull(cardId, "cardId");
 		Objects.requireNonNull(decisionDate, "decisionDate");
+		// 1) 카드의 규칙 버전 존재 여부
 		List<CardRuleVersion> forCard = versions.stream().filter(v -> v.cardId().equals(cardId)).toList();
 		if (forCard.isEmpty()) {
 			return new RuleSelection.Unavailable(cardId, ApplicationStatus.NO_VERIFIED_RULE,
 					"no rule version for card " + cardId);
 		}
+		// 2) 판정일을 포함하는 버전이 있는지 기간부터 확인
 		List<CardRuleVersion> covering = forCard.stream().filter(v -> v.validity().contains(decisionDate)).toList();
 		if (covering.isEmpty()) {
 			return new RuleSelection.Unavailable(cardId, ApplicationStatus.RULE_EXPIRED,
 					"no rule version of card " + cardId + " is valid on " + decisionDate);
 		}
+		// 3) 그중 VERIFIED만 선택. 생성 시 겹침을 막았으므로 최대 한 개다
 		List<CardRuleVersion> verified = covering.stream().filter(CardRuleVersion::isVerified).toList();
 		if (verified.isEmpty()) {
 			return new RuleSelection.Unavailable(cardId, ApplicationStatus.NO_VERIFIED_RULE,
@@ -77,6 +78,9 @@ public final class RuleCatalog {
 		return selected(verified.get(0));
 	}
 
+	/**
+	 * 선택된 규칙의 서비스를 계산 가능한 것과 확인이 필요한 것으로 나누고, 조건부 미확정 조건을 함께 넘긴다.
+	 */
 	private static RuleSelection.Selected selected(CardRuleVersion rule) {
 		Map<ServiceId, List<String>> blocked = new LinkedHashMap<>();
 		List<BenefitService> calculable = rule.services().stream().filter(service -> {

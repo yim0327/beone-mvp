@@ -8,10 +8,9 @@ import com.beone.api.benefit.state.StateSource;
 import com.beone.api.benefit.state.StateValue;
 
 /**
- * A card in the portfolio. {@code holdingSource} keeps virtual cards apart from real ones
- * (PRD §3, D-04).
+ * 포트폴리오의 보유 카드. {@code holdingSource}로 가상 카드와 실제 카드를 구분한다(PRD §3, D-04).
  *
- * @param registeredAt card registration date, used for new-card grace
+ * @param registeredAt 카드 등록일. 신규 유예 판정에 쓴다
  */
 public record HeldCard(CardId cardId, StateSource holdingSource, StateValue<LocalDate> registeredAt) {
 

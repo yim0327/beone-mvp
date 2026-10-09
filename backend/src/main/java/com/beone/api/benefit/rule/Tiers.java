@@ -5,6 +5,9 @@ import java.util.function.Function;
 
 import com.beone.api.benefit.money.Won;
 
+/**
+ * 실적 구간 목록의 공통 검증. 구간이 하나 이상이고 최소 실적이 엄격히 오름차순인지 확인한다.
+ */
 final class Tiers {
 
 	private Tiers() {

@@ -1,12 +1,12 @@
 package com.beone.api.benefit.rule;
 
 /**
- * Window used to compute prior-month performance. Only the window the four candidate cards
- * state is supported; any other window stays an unresolved term (PRD FR-02, D-03).
+ * 전월 실적을 산정하는 기간.
+ * 후보 카드 4종이 쓰는 기간만 지원하고, 그 밖의 기간은 미확정 조건으로 남긴다(PRD FR-02, D-03).
  */
 public enum PerformanceWindow {
 
-	/** The previous calendar month, 1st to last day. */
+	/** 직전 달 1일부터 말일까지. */
 	PREVIOUS_CALENDAR_MONTH
 
 }

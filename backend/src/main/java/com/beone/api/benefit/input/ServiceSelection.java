@@ -6,7 +6,7 @@ import java.util.Objects;
 import com.beone.api.benefit.card.ServiceId;
 
 /**
- * An opt-in service the user selected for a card, effective from a date (09271 FUEL/STORE).
+ * 사용자가 카드에 지정한 선택형 서비스와 적용 시작일(09271 FUEL/STORE).
  */
 public record ServiceSelection(ServiceId service, LocalDate effectiveFrom) {
 

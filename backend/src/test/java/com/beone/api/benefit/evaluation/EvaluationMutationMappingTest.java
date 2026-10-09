@@ -36,9 +36,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * One test per input mutation M01-M10. Each builds the expected input from the base case's
- * model by changing only the patched field (plus values the fixture defaults derive from it) and
- * compares the whole input, then checks the mapped expected result.
+ * 입력 변경 시험 M01~M10을 하나씩 확인한다.
+ * 기준 사례 모델에서 패치한 필드(와 fixture 기본값이 그 필드로부터 정하는 값)만 바꾼 기대 입력을 만들어 입력 전체를 비교하고, 기대 결과도 확인한다.
  */
 class EvaluationMutationMappingTest {
 
@@ -77,8 +76,7 @@ class EvaluationMutationMappingTest {
 		RecommendationInput mutated = input("M02");
 		LocalDate november = LocalDate.of(2026, 11, 1);
 
-		// The fixture defaults derive the used-benefit month and the complete prior-month window
-		// from the order date, so both move with it.
+		// fixture 기본값은 사용액 기준월과 완전 전월 기간을 주문일에서 정하므로 둘 다 함께 바뀐다.
 		BasisPeriod novemberMonth = BasisPeriod.month(YearMonth.of(2026, 11));
 		CardMonthlyState baseState = base.states().get(0);
 		CardMonthlyState expectedState = new CardMonthlyState(baseState.cardId(), baseState.priorPerformance(),
@@ -181,8 +179,8 @@ class EvaluationMutationMappingTest {
 		RecommendationInput base = base("M10", "C19");
 		RecommendationInput mutated = input("M10");
 
-		// Holding, state and the declared complete window follow the held cards; the fixture keeps
-		// the removed card's prior transaction (casebook: ignored by comparison).
+		// 보유 카드, 월간 상태, 완전 기간 선언은 보유 카드를 따라 바뀐다.
+		// 제거된 카드의 과거 거래는 fixture에 남아 있다(사례집: 비교에서 제외).
 		assertThat(mutated).isEqualTo(new RecommendationInput(base.referenceDate(), base.order(),
 				base.cards().stream().filter(card -> card.cardId().equals(TITANIUM)).toList(),
 				new Ledger(base.ledger().source(), base.ledger().transactions(),
@@ -196,9 +194,8 @@ class EvaluationMutationMappingTest {
 
 	@Test
 	void fixtureLedgerCannotConfirmAbsenceOfCancellationsAfterThePriorMonth() {
-		// The fixture declares only the prior month complete. A cancellation received between the
-		// window end and the scenario clock is not ruled out, so an unresolved cancellation
-		// attribution must still be treated as needed.
+		// fixture는 전월만 완전하다고 선언한다. 실적 기간 종료일부터 시나리오 기준일 사이에 접수된 취소를 배제할 수 없으므로,
+		// 미확정 취소 귀속월 조건은 여전히 필요한 것으로 봐야 한다.
 		RecommendationInput c06 = byId.get("C06").input();
 		RecommendationInput c14 = byId.get("C14").input();
 		BasisPeriod september = BasisPeriod.month(YearMonth.of(2026, 9));

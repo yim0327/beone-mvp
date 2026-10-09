@@ -5,6 +5,9 @@ import java.util.Optional;
 
 import com.beone.api.benefit.money.Won;
 
+/**
+ * 입력 모델의 공통 검증. 양수 금액과 선택 텍스트 형식을 확인한다.
+ */
 final class InputChecks {
 
 	private InputChecks() {

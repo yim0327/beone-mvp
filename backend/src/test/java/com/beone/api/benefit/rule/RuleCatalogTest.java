@@ -202,7 +202,7 @@ class RuleCatalogTest {
 		RuleSelection selection = new RuleCatalog(List.of(rule)).select(CARD, ORDER_DATE);
 
 		assertThat(selection).isInstanceOfSatisfying(RuleSelection.Selected.class, selected -> {
-			// Stacking only matters when both services qualify, so it does not block either service.
+			// 중복 허용은 두 서비스가 함께 해당될 때만 의미가 있으므로 어느 서비스도 계산 대상에서 빠지지 않는다.
 			assertThat(selected.calculableServices()).extracting(BenefitService::id)
 				.containsExactly(ServiceId.of("Great"), ServiceId.of("Check"));
 			assertThat(selected.servicesNeedingConfirmation()).isEmpty();

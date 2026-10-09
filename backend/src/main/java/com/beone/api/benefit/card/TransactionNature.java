@@ -1,15 +1,14 @@
 package com.beone.api.benefit.card;
 
 /**
- * Nature of a ledger transaction for prior-month performance, kept separate from its approval or
- * cancellation state (evaluation casebook: {@code ORDINARY}, {@code TAX}).
+ * 전월 실적 판정에 쓰는 원장 거래의 성격. 승인·취소 구분과 별도로 둔다(사례집 {@code ORDINARY}, {@code TAX}).
  */
 public enum TransactionNature {
 
-	/** Recognized purchase that did not receive a discount. */
+	/** 할인을 받지 않은 실적 인정 거래. */
 	ORDINARY,
 
-	/** Tax or public charge, excluded from performance by the candidate rules. */
+	/** 세금·공과금. 후보 규칙에서 실적 제외 대상이다. */
 	TAX
 
 }

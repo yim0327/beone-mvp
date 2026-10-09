@@ -3,11 +3,10 @@ package com.beone.api.benefit.money;
 import java.util.Objects;
 
 /**
- * A benefit amount that is either a confirmed won value or {@code 확인 필요}.
+ * 혜택 금액. 확정된 원 단위 금액이거나 {@code 확인 필요}다.
  *
  * <p>
- * {@link NeedsConfirmation} is never equal to {@code Confirmed(0)} and there is deliberately
- * no accessor that falls back to zero (D-05).
+ * {@link NeedsConfirmation}은 {@code Confirmed(0)}과 같지 않으며, 0원으로 바꿔 주는 메서드를 두지 않는다(D-05).
  */
 public sealed interface BenefitAmount {
 
@@ -22,8 +21,8 @@ public sealed interface BenefitAmount {
 	boolean isConfirmed();
 
 	/**
-	 * Returns the confirmed amount.
-	 * @throws IllegalStateException if the amount still needs confirmation
+	 * 확정 금액을 반환한다.
+	 * @throws IllegalStateException 아직 확인이 필요한 금액인 경우
 	 */
 	Won confirmedWon();
 

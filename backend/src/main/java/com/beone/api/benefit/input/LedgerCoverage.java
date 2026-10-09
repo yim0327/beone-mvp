@@ -6,9 +6,8 @@ import com.beone.api.benefit.card.CardId;
 import com.beone.api.benefit.state.BasisPeriod;
 
 /**
- * Declares that the ledger holds every transaction of a card within a period. Periods not
- * declared are not known to be complete, so values derived from them stay {@code UNKNOWN}
- * (D-04).
+ * 원장이 카드의 해당 기간 거래를 빠짐없이 갖고 있다는 선언.
+ * 선언되지 않은 기간은 완전하다고 보지 않으므로, 그 기간에서 산출한 값은 {@code UNKNOWN}으로 둔다(D-04).
  */
 public record LedgerCoverage(CardId cardId, BasisPeriod period) {
 

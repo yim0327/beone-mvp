@@ -7,8 +7,8 @@ import java.util.Optional;
 import com.beone.api.benefit.card.LimitBucketId;
 
 /**
- * A monthly benefit limit. A bucket with a parent also counts toward the parent, which models an
- * integrated limit over several area limits (limit group).
+ * 월 혜택 한도 묶음.
+ * 상위 한도가 있으면 상위 한도도 함께 차감한다. 여러 영역 한도 위의 통합 한도를 이렇게 표현한다.
  */
 public record LimitBucket(LimitBucketId id, List<LimitTier> tiers, Optional<LimitBucketId> parent) {
 
@@ -22,8 +22,7 @@ public record LimitBucket(LimitBucketId id, List<LimitTier> tiers, Optional<Limi
 	}
 
 	/**
-	 * True when the cap depends on prior-month performance: more than one tier, or a single tier
-	 * above 0 won.
+	 * 한도액이 전월 실적에 따라 달라지면 참. 구간이 둘 이상이거나 단일 구간의 최소 실적이 0원보다 크면 해당한다.
 	 */
 	public boolean dependsOnPerformance() {
 		return tiers.size() > 1 || tiers.get(0).minimumPerformance().isPositive();

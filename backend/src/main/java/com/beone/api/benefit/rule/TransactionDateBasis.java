@@ -1,21 +1,20 @@
 package com.beone.api.benefit.rule;
 
 /**
- * Which date of a transaction a rule counts by. Different bases are never merged just because
- * they fall in the same month (D-03).
+ * 규칙이 거래를 셀 때 쓰는 날짜. 같은 달이라는 이유로 서로 다른 기준일을 합치지 않는다(D-03).
  */
 public enum TransactionDateBasis {
 
-	/** Approval date. */
+	/** 승인일. */
 	APPROVAL,
 
-	/** Usage date, such as the actual ride date. */
+	/** 이용일(예: 실제 탑승일). */
 	USAGE,
 
-	/** Date entered on the card statement. */
+	/** 카드 이용내역서 기재일. */
 	STATEMENT_ENTRY,
 
-	/** Purchase (acquiring) date. */
+	/** 매입일. */
 	PURCHASE
 
 }

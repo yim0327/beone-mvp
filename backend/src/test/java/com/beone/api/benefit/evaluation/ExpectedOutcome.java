@@ -13,12 +13,11 @@ import com.beone.api.benefit.result.ApplicationStatus;
 import com.beone.api.benefit.result.SelectionBasis;
 
 /**
- * Expected result of one evaluation scenario, expressed with the production result types. The
- * fixture only fixes part of a full {@link com.beone.api.benefit.result.Recommendation}, so the
- * fields here are exactly the ones it states.
+ * 평가 시나리오 하나의 기대 결과를 운영 결과 타입으로 표현한다.
+ * fixture는 {@link com.beone.api.benefit.result.Recommendation}의 일부만 정하므로 fixture가 적은 필드만 둔다.
  *
- * @param currentOrderBenefits fixture {@code benefits}; {@code null} becomes needs-confirmation
- * @param monthlyTotal fixture {@code monthlyTotalWon} of the selected card, when stated
+ * @param currentOrderBenefits fixture {@code benefits}. {@code null}은 확인 필요가 된다
+ * @param monthlyTotal 선택 카드의 fixture {@code monthlyTotalWon}. 적힌 경우에만 있다
  */
 record ExpectedOutcome(Map<CardId, BenefitAmount> currentOrderBenefits, Map<CardId, ApplicationStatus> statusByCard,
 		Map<ServiceRef, BenefitAmount> serviceBenefits, Map<ServiceRef, ApplicationStatus> serviceStatus,

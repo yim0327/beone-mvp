@@ -8,8 +8,7 @@ import com.beone.api.benefit.card.ServiceId;
 import com.beone.api.benefit.money.Won;
 
 /**
- * New-card grace: during the span, the listed services treat prior-month performance as at least
- * {@code deemedPerformance} (D-03).
+ * 신규 카드 유예. 유예 기간 동안 대상 서비스는 전월 실적을 최소 {@code deemedPerformance}로 본다(D-03).
  */
 public record NewCardGrace(GraceSpan span, Optional<Integer> days, Won deemedPerformance, Set<ServiceId> services) {
 

@@ -5,7 +5,7 @@ import java.time.YearMonth;
 import java.util.Objects;
 
 /**
- * Inclusive date range a value refers to. Dates are Asia/Seoul calendar dates.
+ * 값이 가리키는 기간. 시작일과 종료일을 포함하며 Asia/Seoul 기준 날짜다.
  */
 public record BasisPeriod(LocalDate from, LocalDate to) {
 

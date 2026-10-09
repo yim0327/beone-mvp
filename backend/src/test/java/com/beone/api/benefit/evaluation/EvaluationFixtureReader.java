@@ -60,20 +60,16 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Reads {@code fixtures/evaluation-cases.json} into the model. It only represents the fixture's
- * inputs and expected results: it never edits the file, never promotes a candidate rule to
- * {@code VERIFIED} and never calculates a benefit.
+ * {@code fixtures/evaluation-cases.json}을 모델로 읽는다.
+ * fixture의 입력과 기대 결과를 표현만 하며, 파일을 수정하거나 후보 규칙을 {@code VERIFIED}로 바꾸거나 혜택을 계산하지 않는다.
  *
  * <p>
- * Mapping choices (issue #15, Q1-Q3):
+ * 매핑 기준(이슈 #15 Q1~Q3):
  * <ul>
- * <li>{@code prior.kind}: {@code ORDINARY}/{@code TAX} become an approval with that nature;
- * {@code CANCEL_RECEIVED} becomes a cancellation keeping its negative amount and
- * {@code originalAt}. Values the fixture omits stay empty.</li>
- * <li>Dates stay dates; no time of day is invented.</li>
- * <li>{@code ruleSnapshot} becomes an evaluation-only rule keeping its fixture status.</li>
- * <li>Fixture defaults are applied explicitly: unlisted benefit usage is the stated synthetic
- * {@code usedBenefitsWon}, and the prior-month window of each held card is declared complete.</li>
+ * <li>{@code prior.kind}: {@code ORDINARY}/{@code TAX}는 해당 성격의 승인 거래로, {@code CANCEL_RECEIVED}는 음수 금액과 {@code originalAt}을 유지한 취소로 바꾼다. fixture에 없는 값은 비워 둔다.</li>
+ * <li>날짜는 날짜로 두고 시각을 만들지 않는다.</li>
+ * <li>{@code ruleSnapshot}은 fixture 상태를 유지한 평가 전용 규칙으로 바꾼다.</li>
+ * <li>fixture 기본값은 명시적으로 적용한다. 적히지 않은 혜택 사용액은 {@code usedBenefitsWon}의 합성 값이고, 보유 카드마다 주문월 기준 전월을 완전 기간으로 선언한다.</li>
  * </ul>
  */
 final class EvaluationFixtureReader {
@@ -100,6 +96,7 @@ final class EvaluationFixtureReader {
 		JsonNode root = MAPPER.readTree(json);
 		requireOnlyKeys(root, "fixture", "schemaVersion", "status", "reviewStatus", "purpose", "policyBasisCommit",
 				"defaults", "sources", "cases", "mutations", "reviewRecord");
+		// 기본값을 먼저 읽고, 사례를 매핑한 뒤 변형은 원본 사례 JSON에 패치를 적용해 매핑한다.
 		JsonNode defaultsNode = required(root, "defaults");
 		EvaluationFixtureReader reader = new EvaluationFixtureReader(Defaults.read(defaultsNode));
 
@@ -147,11 +144,13 @@ final class EvaluationFixtureReader {
 		Order order = order(required(caseNode, "current"));
 		BasisPeriod orderMonth = BasisPeriod.month(YearMonth.from(order.date()));
 
+		// 보유 카드: fixture 기본 등록일을 합성 상태값으로 둔다.
 		List<HeldCard> held = cards.stream()
 			.map(card -> new HeldCard(card, defaults.holdingSource,
 					StateValue.synthetic(defaults.registeredAt, BasisPeriod.day(defaults.currentAt))))
 			.toList();
 
+		// 이번 달 혜택 사용액: "카드:한도" 키를 카드별 한도 묶음 사용액으로 나눈다.
 		Map<CardId, Map<LimitBucketId, StateValue<Won>>> usedByCard = new HashMap<>();
 		if (caseNode.get("usedBenefits") != null) {
 			for (Map.Entry<String, JsonNode> entry : required(caseNode, "usedBenefits").properties()) {
@@ -168,6 +167,7 @@ final class EvaluationFixtureReader {
 			}
 		}
 
+		// 선택 서비스: fixture에 카드 ID가 없으므로 보유 카드가 한 장일 때만 연결한다.
 		List<StateValue<ServiceSelection>> selections = List.of();
 		if (caseNode.get("selection") != null) {
 			JsonNode selection = required(caseNode, "selection");
@@ -187,6 +187,7 @@ final class EvaluationFixtureReader {
 					StateValue.synthetic(defaults.usedBenefits, orderMonth), cardSelections))
 			.toList();
 
+		// 원장: 주문월 기준 전월을 보유 카드마다 완전 기간으로 선언한다(fixture priorLedgerCompleteness).
 		BasisPeriod priorMonth = BasisPeriod.month(YearMonth.from(order.date()).minusMonths(1));
 		List<LedgerCoverage> coverage = cards.stream().map(card -> new LedgerCoverage(card, priorMonth)).toList();
 		List<LedgerTransaction> transactions = required(caseNode, "prior").values()
@@ -195,6 +196,7 @@ final class EvaluationFixtureReader {
 			.toList();
 		Ledger ledger = new Ledger(LedgerSource.SIMULATION, transactions, coverage);
 
+		// 예정 소비와 대표 카드: 사례에 없으면 fixture 기본값을 쓴다.
 		JsonNode futureNode = caseNode.get("future") != null ? required(caseNode, "future") : defaults.future;
 		PlannedSpendings planned = new PlannedSpendings(
 				futureNode.values().stream().map(EvaluationFixtureReader::plannedSpending).toList());
@@ -298,7 +300,7 @@ final class EvaluationFixtureReader {
 	}
 
 	/**
-	 * {@code null} is the fixture's {@code 확인 필요}; it never becomes 0 won.
+	 * fixture의 {@code null}은 {@code 확인 필요}이며 0원으로 바꾸지 않는다.
 	 */
 	private static BenefitAmount amount(JsonNode value, String key) {
 		if (value.isNull()) {
@@ -335,7 +337,7 @@ final class EvaluationFixtureReader {
 	}
 
 	/**
-	 * Fixture defaults the mapping depends on, read from the file rather than hardcoded.
+	 * 매핑에 쓰는 fixture 기본값. 코드에 고정하지 않고 파일에서 읽는다.
 	 */
 	private record Defaults(LocalDate currentAt, LocalDate registeredAt, Won usedBenefits, JsonNode future,
 			String representativeCard, StateSource holdingSource) {

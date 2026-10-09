@@ -11,14 +11,12 @@ import com.beone.api.benefit.money.Won;
 import com.beone.api.benefit.state.StateValue;
 
 /**
- * Monthly state of one held card. Every value carries its source (D-04).
+ * 보유 카드 한 장의 월간 상태. 모든 값은 출처와 함께 보관한다(D-04).
  *
- * @param priorPerformance prior-month performance when it was supplied directly; empty means it
- * must be derived from the ledger
- * @param usedBenefits benefit already used this month, by limit bucket
- * @param otherBucketsUsed usage of buckets not listed in {@code usedBenefits}; {@code UNKNOWN}
- * when not supplied, never 0 won
- * @param serviceSelections opt-in service selections with their effective dates
+ * @param priorPerformance 직접 입력된 전월 실적. 비어 있으면 원장에서 산출해야 한다
+ * @param usedBenefits 한도 묶음별 이번 달 혜택 사용액
+ * @param otherBucketsUsed {@code usedBenefits}에 없는 한도 묶음의 사용액. 입력이 없으면 {@code UNKNOWN}이며 0원으로 보지 않는다
+ * @param serviceSelections 선택형 서비스와 적용 시작일
  */
 public record CardMonthlyState(CardId cardId, Optional<StateValue<Won>> priorPerformance,
 		Map<LimitBucketId, StateValue<Won>> usedBenefits, StateValue<Won> otherBucketsUsed,

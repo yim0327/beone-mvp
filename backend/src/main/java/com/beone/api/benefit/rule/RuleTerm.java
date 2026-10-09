@@ -3,11 +3,11 @@ package com.beone.api.benefit.rule;
 import java.util.Objects;
 
 /**
- * A rule term that is either resolved from verified sources or still {@code UNRESOLVED}.
+ * 규칙 조건 값. 검증된 근거로 확정됐거나 아직 미확정({@code UNRESOLVED})이다.
  *
  * <p>
- * An unresolved term means {@code 확인 필요}. It has no default and no fallback to 0 won; code
- * that needs the value must treat the affected benefit as needing confirmation (D-03, D-05).
+ * 미확정은 {@code 확인 필요}를 뜻한다. 기본값이나 0원 대체 값이 없으며,
+ * 값이 필요한 계산은 해당 혜택을 확인 필요로 처리해야 한다(D-03, D-05).
  */
 public sealed interface RuleTerm<T> {
 
@@ -22,8 +22,8 @@ public sealed interface RuleTerm<T> {
 	boolean isResolved();
 
 	/**
-	 * Returns the resolved value.
-	 * @throws IllegalStateException if the term is unresolved
+	 * 확정 값을 반환한다.
+	 * @throws IllegalStateException 미확정 조건인 경우
 	 */
 	T resolvedValue();
 

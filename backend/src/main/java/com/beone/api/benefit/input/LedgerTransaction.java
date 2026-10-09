@@ -12,11 +12,10 @@ import com.beone.api.benefit.card.TransactionNature;
 import com.beone.api.benefit.money.Won;
 
 /**
- * One ledger transaction (PRD FR-02). Values the source did not provide stay empty and are never
- * filled with defaults.
+ * 원장 거래 한 건(PRD FR-02). 출처가 주지 않은 값은 비워 두고 기본값으로 채우지 않는다.
  *
- * @param date approval date, or the receipt date of a cancellation
- * @param originalDate date of the cancelled original, only for a cancellation
+ * @param date 승인일. 취소는 취소 접수일
+ * @param originalDate 취소된 원거래의 날짜. 취소에만 쓴다
  */
 public record LedgerTransaction(CardId cardId, LocalDate date, Optional<LocalTime> time, Won amount,
 		LedgerEntryType type, Optional<TransactionNature> nature, Optional<MerchantClass> merchantClass,

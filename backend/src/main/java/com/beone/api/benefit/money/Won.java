@@ -1,8 +1,8 @@
 package com.beone.api.benefit.money;
 
 /**
- * Korean won as an integer amount. The sign is allowed so cancellations can be negative;
- * each model decides which signs it accepts. Never use {@code float} or {@code double} for money.
+ * 원 단위 정수 금액. 취소를 위해 음수도 허용하며, 부호 제한은 각 모델이 검증한다.
+ * 금액에 {@code float}·{@code double}을 쓰지 않는다.
  */
 public record Won(long value) implements Comparable<Won> {
 

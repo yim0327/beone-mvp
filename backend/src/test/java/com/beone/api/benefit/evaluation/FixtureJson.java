@@ -7,8 +7,8 @@ import java.util.Set;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Strict accessors for the evaluation fixture. Unknown keys, missing keys and wrong types fail so
- * no fixture field is dropped or reinterpreted silently.
+ * 평가 fixture를 엄격하게 읽는 도구.
+ * 모르는 키, 빠진 키, 잘못된 타입은 실패시켜 fixture 필드가 조용히 빠지거나 다르게 해석되지 않게 한다.
  */
 final class FixtureJson {
 

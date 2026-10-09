@@ -6,7 +6,7 @@ import java.util.Set;
 import com.beone.api.benefit.card.MerchantClass;
 
 /**
- * Merchants a benefit service targets before exclusions are applied.
+ * 제외 조건을 적용하기 전 혜택 서비스의 대상 가맹점.
  */
 public sealed interface MerchantTarget {
 
@@ -18,11 +18,11 @@ public sealed interface MerchantTarget {
 		return new SpecificClasses(classes);
 	}
 
-	/** Every merchant, such as the 09271 base accrual. */
+	/** 모든 가맹점(예: 09271 기본 적립). */
 	record AllMerchants() implements MerchantTarget {
 	}
 
-	/** Only the listed merchant classes. */
+	/** 나열한 업종만. */
 	record SpecificClasses(Set<MerchantClass> classes) implements MerchantTarget {
 
 		public SpecificClasses {

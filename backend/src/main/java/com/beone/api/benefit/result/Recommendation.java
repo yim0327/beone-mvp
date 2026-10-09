@@ -8,7 +8,7 @@ import java.util.Set;
 import com.beone.api.benefit.card.CardId;
 
 /**
- * Card results and the selection for one recommendation input.
+ * 추천 입력 하나에 대한 카드별 결과와 선택 결과.
  */
 public record Recommendation(List<CardBenefit> cardBenefits, RecommendationOutcome outcome) {
 

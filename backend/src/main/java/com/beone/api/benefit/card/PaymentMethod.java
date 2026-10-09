@@ -1,19 +1,19 @@
 package com.beone.api.benefit.card;
 
 /**
- * Confirmed payment method of an order, planned spending or ledger transaction.
+ * 주문·예정 소비·원장 거래의 확인된 결제 방식.
  */
 public enum PaymentMethod {
 
-	/** Paid directly with the card. */
+	/** 카드로 직접 결제. */
 	DIRECT,
 
-	/** Paid through a simple-pay service the card terms list as eligible (09174 Check). */
+	/** 카드 약관이 대상으로 정한 간편결제(09174 Check). */
 	ELIGIBLE_SIMPLE_PAY,
 
 	/**
-	 * Automatic transfer registered to this card. The evaluation fixture uses it as a simplified
-	 * input for the autopay registration that D-10 treats as a user-confirmed state.
+	 * 이 카드로 등록한 자동이체.
+	 * 평가 fixture는 D-10의 자동이체 등록(사용자 확인 상태)을 이 값으로 단순화했다.
 	 */
 	AUTOPAY
 

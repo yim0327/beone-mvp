@@ -6,8 +6,8 @@ import java.util.Optional;
 import com.beone.api.benefit.card.CardId;
 
 /**
- * Pre-payment selection setting. In {@code AUTO_RECOMMEND} the representative card only breaks
- * ties among cards with equal benefits (D-12 step 3).
+ * 결제 전 카드 선택 설정.
+ * {@code AUTO_RECOMMEND}에서 대표 카드는 혜택이 같은 카드 사이의 동률 판정에만 쓴다(D-12 3단계).
  */
 public record SelectionPreference(SelectionMode mode, Optional<CardId> representativeCard) {
 

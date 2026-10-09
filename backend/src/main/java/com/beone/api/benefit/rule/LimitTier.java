@@ -5,7 +5,7 @@ import java.util.Objects;
 import com.beone.api.benefit.money.Won;
 
 /**
- * Monthly cap that applies when prior-month performance is at least {@code minimumPerformance}.
+ * 전월 실적이 {@code minimumPerformance} 이상일 때 적용하는 월 한도액.
  */
 public record LimitTier(Won minimumPerformance, Won monthlyCap) {
 

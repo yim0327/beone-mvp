@@ -8,8 +8,8 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * Minimal RFC 6902 patch for the evaluation mutations. Only {@code add} and {@code replace} are
- * supported; anything else fails so a new operation is never silently ignored.
+ * 평가 변형용 최소 RFC 6902 패치.
+ * {@code add}와 {@code replace}만 지원하고, 그 밖의 연산은 조용히 무시하지 않도록 실패시킨다.
  */
 final class JsonPatch {
 
@@ -17,7 +17,7 @@ final class JsonPatch {
 	}
 
 	/**
-	 * Applies the operations to a copy of {@code document} and returns the copy.
+	 * {@code document}의 복사본에 연산을 적용해 반환한다.
 	 */
 	static JsonNode apply(JsonNode document, JsonNode operations) {
 		JsonNode patched = document.deepCopy();

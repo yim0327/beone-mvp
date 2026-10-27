@@ -48,6 +48,9 @@ tasks.named('test', Test) {
 	// Read by MySqlVersionAlignmentTest; declared so edits re-run the test.
 	inputs.file(layout.projectDirectory.file('../docker-compose.yml'))
 		.withPathSensitivity(PathSensitivity.NONE)
+	// EvaluationFixtureMappingTest가 읽는 파일. fixture가 바뀌면 테스트를 다시 실행하도록 입력으로 선언한다.
+	inputs.file(layout.projectDirectory.file('../fixtures/evaluation-cases.json'))
+		.withPathSensitivity(PathSensitivity.NONE)
 }
 
 // Integration tests: @IntegrationTest (Testcontainers MySQL). Requires Docker.

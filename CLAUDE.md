@@ -79,13 +79,15 @@
 ```bash
 cd backend
 ./gradlew test
+./gradlew webTest
 ./gradlew integrationTest
 ./gradlew build
 ```
 
 - `test`: Docker가 필요 없는 단위 테스트
+- `webTest`: Docker·DB가 필요 없는 `@WebSliceTest` MockMvc 웹 슬라이스 테스트. API 응답·예외 처리를 바꾸면 실행한다(`docs/api.md`)
 - `integrationTest`: Docker가 필요한 Testcontainers MySQL 통합 테스트
-- `build`: 단위·통합 테스트를 포함하므로 Docker 필요
+- `build`: 단위·웹·통합 테스트를 포함하므로 Docker 필요
 
 로컬 API를 실행할 때는 먼저 프로젝트 루트에서 MySQL을 실행하고, README에 따라 루트 `.env`를 백엔드 프로세스에 전달한다.
 

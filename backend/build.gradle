@@ -43,7 +43,7 @@ tasks.withType(Test).configureEach {
 // Unit tests: no Spring context, no Docker.
 tasks.named('test', Test) {
 	useJUnitPlatform {
-		excludeTags 'integration'
+		excludeTags 'integration', 'web'
 	}
 	// Read by MySqlVersionAlignmentTest; declared so edits re-run the test.
 	inputs.file(layout.projectDirectory.file('../docker-compose.yml'))
@@ -65,6 +65,19 @@ def integrationTest = tasks.register('integrationTest', Test) {
 	shouldRunAfter tasks.named('test')
 }
 
+// 웹 슬라이스 테스트: @WebSliceTest(@WebMvcTest + MockMvc). DB·Docker 없이 실행한다.
+def webTest = tasks.register('webTest', Test) {
+	description = 'Runs @WebSliceTest tests against a Spring MVC slice without a database.'
+	group = LifecycleBasePlugin.VERIFICATION_GROUP
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform {
+		includeTags 'web'
+	}
+	shouldRunAfter tasks.named('test')
+}
+
 tasks.named('check') {
 	dependsOn integrationTest
+	dependsOn webTest
 }

@@ -8,7 +8,7 @@
 
 - [android/](../android/): Kotlin Android 앱. 제품에서는 React 화면을 표시할 WebView 셸과 기기 인증을 담당할 예정입니다. 현재 구성만으로 WebView·생체인증 연동이 구현되었다고 판단하지 않습니다.
 - [frontend/](../frontend/): Vite·React·TypeScript 웹. 주문, 카드 상태, 추천 결과를 보여줄 화면 영역이며 현재는 초기 구성 단계입니다.
-- [backend/](../backend/): Java 21·Spring Boot API. 카드 규칙과 계산 입출력 모델을 보유합니다. DB 마이그레이션은 Flyway로 관리합니다.
+- [backend/](../backend/): Java 21·Spring Boot API. 카드 규칙과 계산 입출력 모델, 공통 API 응답·예외 처리를 보유합니다. DB 마이그레이션은 Flyway로 관리합니다.
 - [docs/](./): 요구사항, 결정, 조사·평가 자료와 개발 안내.
 - [fixtures/](../fixtures/): 비식별 평가·시연 데이터. 테스트용 합성 값은 실제 관측값과 구분합니다.
 
@@ -25,6 +25,14 @@
   - 하위 패키지: `card`, `money`, `state`, `input`, `rule`, `result`
   - 책임: 안전한 데이터 표현, 입력·결과 일관성 검사, 날짜에 맞는 검증 규칙 선택.
   - 범위 밖: 실제 혜택 금액 계산·최적화 엔진, HTTP 추천 API, CODEF 통신 구현.
+
+도메인이 아닌 공통 웹 기반 코드:
+
+- `common.web`: 공통 API 응답 형식과 예외 처리
+  - 위치: `backend/src/main/java/com/beone/api/common/web/`
+  - 책임: 성공·실패 응답 형식, 공통 오류 코드, 요청 오류·예상하지 못한 오류의 HTTP 응답 변환과 안전한 로그.
+  - 의존 방향: 컨트롤러·예외 처리기 같은 웹 경계에서만 사용합니다. 도메인 코드는 이 패키지에 의존하지 않습니다.
+  - 설명 문서: [API 공통 응답·오류 처리](api.md)
 
 ## 데이터 흐름과 현재 구현의 경계
 

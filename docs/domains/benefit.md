@@ -54,7 +54,7 @@ CODEF·수동 입력·추론 값에는 갱신 시각이 필요합니다. 추론 
 
 ### input: 계산 입력
 
-- [RecommendationInput](../../backend/src/main/java/com/beone/api/benefit/input/RecommendationInput.java): 기준 날짜, 주문, 보유 카드, 원장, 월별 상태, 예정 지출, 선택 설정을 묶는 최상위 입력. 보유 카드 중복과 미보유 카드 참조 등을 검사합니다.
+- [RecommendationInput](../../backend/src/main/java/com/beone/api/benefit/input/RecommendationInput.java): 기준 날짜, 주문, 보유 카드, 원장, 월별 상태, 예정 지출, 선택 설정을 묶는 최상위 입력. 보유 카드 중복, 동일 카드의 월간 상태 중복, 미보유 카드 참조 등을 검사합니다.
 - [Order](../../backend/src/main/java/com/beone/api/benefit/input/Order.java): 현재 결제할 주문의 금액·날짜·가맹점 분류·결제 방식.
 - [PlannedSpending](../../backend/src/main/java/com/beone/api/benefit/input/PlannedSpending.java): 사용자가 확인한 예정 지출 한 건.
 - [PlannedSpendings](../../backend/src/main/java/com/beone/api/benefit/input/PlannedSpendings.java): 예정 지출 목록. 최대 5건.

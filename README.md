@@ -91,10 +91,13 @@ cd android
 | 명령 | 내용 | Docker |
 |---|---|---|
 | `./gradlew test` | 단위 테스트 (Spring 컨텍스트·DB 없음) | 불필요 |
+| `./gradlew webTest` | `@WebSliceTest` 웹 슬라이스 테스트 (MockMvc, DB 없음) | 불필요 |
 | `./gradlew integrationTest` | `@IntegrationTest` 통합 테스트 (Testcontainers MySQL) | 필요 |
-| `./gradlew build` | 단위 + 통합 테스트 + 빌드 | 필요 |
+| `./gradlew build` | 단위 + 웹 + 통합 테스트 + 빌드 | 필요 |
 
 - 통합 테스트는 `com.beone.api.support.IntegrationTest` 어노테이션을 붙입니다. `integration` 태그가 붙어 `test` 태스크에서는 제외됩니다.
+- 웹 슬라이스 테스트는 `com.beone.api.support.WebSliceTest` 어노테이션을 붙입니다. `web` 태그가 붙어 `webTest`에서만 실행됩니다. `check`·`build`는 `webTest`와 `integrationTest`를 함께 실행하므로 Docker가 필요합니다.
+- API 응답 형식과 오류 처리는 [`docs/api.md`](docs/api.md)를 따릅니다.
 - MySQL 버전을 바꿀 때는 `docker-compose.yml`과 `backend/src/test/java/com/beone/api/support/MySqlImage.java`를 함께 수정합니다. 두 값이 다르면 `MySqlVersionAlignmentTest`가 실패합니다.
 - DB 스키마는 Flyway 마이그레이션(`backend/src/main/resources/db/migration`)으로만 변경합니다.
 

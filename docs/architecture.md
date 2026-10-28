@@ -22,9 +22,9 @@
 
 - [benefit: 카드 혜택 규칙과 계산 입출력](domains/benefit.md)
   - 위치: `backend/src/main/java/com/beone/api/benefit/`
-  - 하위 패키지: `card`, `money`, `state`, `input`, `rule`, `result`
-  - 책임: 안전한 데이터 표현, 입력·결과 일관성 검사, 날짜에 맞는 검증 규칙 선택.
-  - 범위 밖: 실제 혜택 금액 계산·최적화 엔진, HTTP 추천 API, CODEF 통신 구현.
+  - 하위 패키지: `card`, `money`, `state`, `input`, `rule`, `primitive`, `result`
+  - 책임: 안전한 데이터 표현, 입력·결과 일관성 검사, 날짜에 맞는 검증 규칙 선택, 서비스 한 건의 산식·개별 조건 판정(`primitive`).
+  - 범위 밖: 판정을 묶어 카드별 혜택을 내는 계산·최적화 엔진, HTTP 추천 API, CODEF 통신 구현.
 
 도메인이 아닌 공통 웹 기반 코드:
 

@@ -33,3 +33,10 @@
 - 검증: `./gradlew assembleDebug testDebugUnitTest lintDebug` 실제 실행, 통과 44건, lint 경고 8건 모두 기존 항목(기준 `cbc50fb` + 미커밋 변경)
 - 남은 제한: 기기 PIN 입력이 `onStop`을 일으키는 기기라면 PIN 입력이 끊깁니다. 실기기 확인 목록 8번에서 확인합니다.
 - 다음: 커밋, PR
+
+### 2026-10-28 19:58 · PR과 독립 리뷰 요청 · 리뷰 대기
+- 한 일: 모듈 전체 검증 뒤 push하고 draft PR #24를 열었습니다. CodeRabbit 전체 리뷰를 한 번 요청했습니다.
+- 서비스에서 달라진 점: 없음(`develop` 미반영, 병합은 사용자 승인 대기)
+- 검증: `assembleDebug testDebugUnitTest lintDebug --rerun-tasks`, `assembleRelease lintRelease --rerun-tasks` 실제 실행, 통과(기준 `0752331`, 미커밋 변경 없음)
+- 남은 제한: CodeRabbit 무료 한도로 리뷰가 시작되지 않아 리뷰 대기입니다. 실기기 확인도 대기입니다.
+- 다음: 독립 작업 #25 WebView 셸 기초

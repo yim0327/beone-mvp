@@ -18,7 +18,8 @@
 
 ## 현재 작업과 PR
 
-- [#22](https://github.com/yim0327/beone-mvp/issues/22) 기기 인증과 60초 활성 상태 — PR 리뷰 대기, 실기기 확인 대기 ([단계 기록](22-auth-session.md))
+- [#22](https://github.com/yim0327/beone-mvp/issues/22) 기기 인증과 60초 활성 상태 — draft [PR #24](https://github.com/yim0327/beone-mvp/pull/24), 독립 리뷰 대기(CodeRabbit 한도), 실기기 확인 대기, 병합 승인 대기 ([단계 기록](22-auth-session.md))
+- [#25](https://github.com/yim0327/beone-mvp/issues/25) WebView 셸 기초 — 별도 브랜치에서 진행
 
 ## 사용자 확인 사항
 
@@ -30,4 +31,4 @@
 ## 다음 작업
 
 - #22 PR 독립 리뷰 확인과 지적 사항 반영
-- WebView 셸 기초(설정값으로 origin 분리, 스킴·탐색 제한, debug/release 분리, inset) — 1번 결정 전까지 확정하지 않는 범위로만
+- #25 WebView 셸 기초 마무리

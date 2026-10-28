@@ -6,7 +6,7 @@
 
 ## 모듈과 역할
 
-- [android/](../android/): Kotlin Android 앱. 제품에서는 React 화면을 표시할 WebView 셸과 기기 인증을 담당할 예정입니다. 현재 구성만으로 WebView·생체인증 연동이 구현되었다고 판단하지 않습니다.
+- [android/](../android/): Kotlin Android 앱. 제품에서는 React 화면을 표시할 WebView 셸과 기기 인증을 담당합니다. 기기 인증과 60초 활성 상태의 네이티브 기반은 [Android 기기 인증 안내](android/auth-session.md)에 있으며 실기기 확인 전입니다. WebView 화면과 웹으로의 상태 전달은 아직 구현하지 않았습니다.
 - [frontend/](../frontend/): Vite·React·TypeScript 웹. 주문, 카드 상태, 추천 결과를 보여줄 화면 영역이며 현재는 초기 구성 단계입니다.
 - [backend/](../backend/): Java 21·Spring Boot API. 카드 규칙과 계산 입출력 모델, 공통 API 응답·예외 처리를 보유합니다. DB 마이그레이션은 Flyway로 관리합니다.
 - [docs/](./): 요구사항, 결정, 조사·평가 자료와 개발 안내.

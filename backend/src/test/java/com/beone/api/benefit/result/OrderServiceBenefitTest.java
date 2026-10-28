@@ -59,6 +59,26 @@ class OrderServiceBenefitTest {
 	}
 
 	@Test
+	void allowedUnmetConditionsCannotBeChanged() {
+		// 같은 패키지 코드가 생성 검증 기준을 바꾸지 못해야 한다.
+		Set<ApplicationStatus> allowed = ServiceCandidate.ALLOWED_UNMET_CONDITIONS;
+
+		assertThatThrownBy(() -> allowed.add(ApplicationStatus.APPLIED)).isInstanceOf(UnsupportedOperationException.class);
+		assertThatThrownBy(() -> allowed.remove(ApplicationStatus.LIMIT_EXHAUSTED))
+			.isInstanceOf(UnsupportedOperationException.class);
+		assertThatThrownBy(allowed::clear).isInstanceOf(UnsupportedOperationException.class);
+
+		assertThat(allowed).containsExactlyInAnyOrder(ApplicationStatus.NOT_APPLICABLE_EXCLUDED,
+				ApplicationStatus.NOT_APPLICABLE_CATEGORY, ApplicationStatus.NOT_APPLICABLE_PERFORMANCE,
+				ApplicationStatus.NOT_APPLICABLE_MIN_AMOUNT, ApplicationStatus.NOT_APPLICABLE_PAYMENT_METHOD,
+				ApplicationStatus.LIMIT_EXHAUSTED);
+		assertThat(new ServiceCandidate(SERVICE, ZERO, Set.of(ApplicationStatus.LIMIT_EXHAUSTED)).hasUnmetConditions())
+			.isTrue();
+		assertThatThrownBy(() -> new ServiceCandidate(SERVICE, ZERO, Set.of(ApplicationStatus.APPLIED)))
+			.hasMessageContaining("cannot use");
+	}
+
+	@Test
 	void unmetConditionsAreCopiedAndImmutable() {
 		Set<ApplicationStatus> input = new HashSet<>(Set.of(ApplicationStatus.NOT_APPLICABLE_CATEGORY));
 		ServiceCandidate candidate = new ServiceCandidate(SERVICE, ZERO, input);

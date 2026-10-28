@@ -1,6 +1,5 @@
 package com.beone.api.benefit.result;
 
-import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -19,8 +18,8 @@ import com.beone.api.benefit.money.BenefitAmount;
 public record ServiceCandidate(ServiceId serviceId, BenefitAmount standaloneAmount,
 		Set<ApplicationStatus> unmetConditions) {
 
-	/** 후보의 미충족 사유로 쓸 수 있는 상태. 상태가 추가돼도 자동으로 허용하지 않는다. */
-	static final Set<ApplicationStatus> ALLOWED_UNMET_CONDITIONS = EnumSet.of(ApplicationStatus.NOT_APPLICABLE_EXCLUDED,
+	/** 후보의 미충족 사유로 쓸 수 있는 상태. 상태가 추가돼도 자동으로 허용하지 않으며, 목록은 바꿀 수 없다. */
+	static final Set<ApplicationStatus> ALLOWED_UNMET_CONDITIONS = Set.of(ApplicationStatus.NOT_APPLICABLE_EXCLUDED,
 			ApplicationStatus.NOT_APPLICABLE_CATEGORY, ApplicationStatus.NOT_APPLICABLE_PERFORMANCE,
 			ApplicationStatus.NOT_APPLICABLE_MIN_AMOUNT, ApplicationStatus.NOT_APPLICABLE_PAYMENT_METHOD,
 			ApplicationStatus.LIMIT_EXHAUSTED);

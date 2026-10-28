@@ -112,8 +112,12 @@ D-13도 PRD §11의 미결 목록이 아니라 단일 주문 혜택 계산의 �
 **확정한 것**
 
 - 단일 주문 결과는 신규 `OrderBenefit` 타입으로 분리한다.
-- 기존 `CardBenefit`·`Recommendation`은 월간 결과라는 현재 의미를 유지한다.
-- 기존 `ApplicationStatus`·`ServiceBenefit`의 의미와 계약은 유지한다.
+- 기존 결과 타입의 현재 계약은 유지한다.
+  - `CardBenefit`은 현재 주문의 혜택 `currentOrderBenefit`, 현재 주문의 서비스별 결과 `services`, 현재 주문을 그 카드로 결제할 때의 월간 총예상 혜택 `monthlyTotal`을 함께 담는다.
+  - `Recommendation`은 추천 입력 하나에 대한 카드별 결과와 선택 결과를 담는다.
+  - `ApplicationStatus`·`ServiceBenefit`의 의미와 계약도 그대로 둔다.
+- `OrderBenefit`을 도입한다는 이유로 기존 필드를 삭제하거나 대체하지 않는다.
+- 같은 주문의 혜택을 중복 계산하거나 합산하지 않는다. D-12가 비교에 쓰는 `monthlyTotal`·`currentOrderBenefit`을 제거하거나 다르게 해석하지 않는다.
 - 서비스의 조건 판정(조건을 충족했는지)과 최종 채택 여부(그 카드의 최종 금액에 넣었는지)를 분리한다. 채택 여부는 `ADOPTED`(채택), `NOT_ADOPTED`(채택하지 않음), `UNDETERMINED`(채택 여부를 정할 수 없음) 세 가지이다.
 - 최종 카드 금액에 실제로 들어가는 서비스별 기여액 `contribution`을, 채택 여부를 정하기 전에 서비스별로 계산한 후보 금액과 구분한다.
 - 채택하지 않은 안: 기존 `ServiceBenefit`을 "그 서비스만 채택됐을 때의 후보 금액" 타입으로 재해석하지 않는다.
@@ -122,6 +126,7 @@ D-13도 PRD §11의 미결 목록이 아니라 단일 주문 혜택 계산의 �
 
 - 후보 금액 전용 타입의 상세 필드와 상태
 - `OrderBenefit` 전체 구조와, 결과를 "규칙 없음/판정 완료" 등으로 나누는 sealed 분리 여부
+- `OrderBenefit`과 기존 `CardBenefit`의 `currentOrderBenefit`·`services`·`remainingLimits` 사이의 연결·매핑 관계. 어떤 방식으로 연결할지는 정하지 않았으며, 연결을 구현하기 전에 별도로 명시한다.
 - 결과 타입의 상세 불변 조건 전체
 - 어떤 경우에 `UNDETERMINED`를 쓰는지(원인과 판정 조건)
 - 적용된 서비스가 없을 때 카드 단위 사유의 우선순위

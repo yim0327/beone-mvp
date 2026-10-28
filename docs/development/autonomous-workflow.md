@@ -97,21 +97,38 @@
    - 브랜치를 바꾸거나 파일을 덮어써서 문제를 피하지 않습니다.
 5. 그 worktree의 기준 문서 5개를 최신 `origin/develop`과 비교합니다. 이전 작업 공간이나 병합된 옛 브랜치를 비교하지 않습니다.
    - 대상: `CLAUDE.md`, `docs/development/autonomous-workflow.md`, `docs/development/backend-start.md`, `docs/development/android-start.md`, `docs/decisions.md`
-   - 존재 확인: 파일마다 `origin/develop` 쪽은 `git cat-file -e origin/develop:<파일>`로, 고른 worktree 쪽은 `test -f <파일>`로 따로 확인합니다.
-   - 내용 비교: 다음 명령의 종료 코드로 판단합니다. `0`은 차이 없음, `1`은 차이 있음, 그 밖의 값은 명령·조회 오류입니다.
+   - 기준은 1단계에서 기록한 `origin/develop` SHA로 고정합니다. 비교 중에 다시 fetch하거나 기준을 바꾸지 않습니다.
+   - 파일마다 기준 커밋의 내용(`git show "<기준 SHA>:<파일>"`)과 worktree의 실제 파일을 `cmp`로 바이트 단위 비교합니다. tracked·untracked 여부와 관계없이 같은 방식으로 비교하고, 마지막 줄바꿈 등 내용을 정규화하지 않습니다.
+   - 고른 worktree의 최상위에서 `PUT_SHA_HERE`를 기록한 SHA로 바꿔 bash로 실행합니다. 괄호는 하위 셸이라 `exit`가 현재 셸을 닫지 않습니다. 종료 코드 `0`은 5개 모두 일치, `1`은 누락·차이·조회·읽기 오류, `2`는 기준 SHA나 임시 디렉터리 오류입니다.
 
      ```bash
-     git diff --exit-code origin/develop -- \
-       CLAUDE.md \
-       docs/development/autonomous-workflow.md \
-       docs/development/backend-start.md \
-       docs/development/android-start.md \
-       docs/decisions.md
+     (
+       base=PUT_SHA_HERE
+       git rev-parse --verify --quiet "$base^{commit}" >/dev/null || { echo "기준 조회 오류: $base"; exit 2; }
+       tmp=$(mktemp -d) || { echo "임시 디렉터리 생성 오류"; exit 2; }
+       result=0
+       for f in CLAUDE.md docs/development/autonomous-workflow.md docs/development/backend-start.md docs/development/android-start.md docs/decisions.md; do
+         if ! git cat-file -e "$base:$f" 2>/dev/null; then echo "기준에 없음: $f"; result=1
+         elif [ ! -f "$f" ]; then echo "worktree에 없음: $f"; result=1
+         elif ! git show "$base:$f" > "$tmp/base"; then echo "기준 조회 오류: $f"; result=1
+         else
+           cmp -s "$tmp/base" "$f"
+           case $? in
+             0) echo "일치: $f" ;;
+             1) echo "내용 차이: $f"; result=1 ;;
+             *) echo "읽기 오류: $f"; result=1 ;;
+           esac
+         fi
+       done
+       rm -rf "$tmp"
+       exit "$result"
+     )
      ```
 
-   - 차이 난 파일은 같은 5개 경로를 지정한 `git diff --name-status origin/develop -- <위 5개 파일>`로 확인합니다.
+   - 기준 내용은 파이프로 넘기지 않고 전용 임시 디렉터리의 파일에 저장합니다. 그래야 `git show` 실패를 `cmp` 결과와 구분할 수 있고, 명령 치환처럼 마지막 줄바꿈이 사라지지 않습니다. 임시 디렉터리는 비교 뒤 지우며, 저장소 파일·index·브랜치는 바꾸지 않습니다.
+   - `git diff --name-status <기준 SHA> -- <위 5개 파일>`은 tracked 파일의 차이를 보는 보조 진단으로만 씁니다. untracked 파일은 비교하지 않으므로 통과 판단에 쓰지 않습니다.
    - 최신 SHA 확인이나 존재 확인만으로 내용 비교를 대신하지 않습니다.
-   - 파일 누락, 차이, 명령 오류 중 하나라도 있으면 모드를 시작·재개하지 않습니다. 차이 난 파일, 원인, 필요한 다음 행동을 사용자에게 보고합니다. 파일 덮어쓰기·reset·자동 동기화로 우회하지 않으며, 이 점검이 merge 권한을 넓히지 않습니다.
+   - 기준 조회 오류, 파일 누락, 읽기 오류, 내용 차이 중 하나라도 있으면 모드를 시작·재개하지 않습니다. 차이 난 파일, 원인, 필요한 다음 행동을 사용자에게 보고합니다. 파일 덮어쓰기·reset·자동 동기화로 우회하지 않으며, 이 점검이 merge 권한을 넓히지 않습니다.
    - 기존 worktree의 기준 문서가 오래돼 멈추는 것은 의도한 안전 동작입니다.
    - 이 비교는 장기 연속 개발 모드의 시작·재개에만 적용합니다. 운영 문서 자체를 검토·수정하는 일반 작업은 이 비교로 차단하지 않습니다.
 6. 문서가 일치할 때만 자기 작업선의 진행 기록 `docs/progress/<작업선>/README.md`를 읽고 구현·재개 절차로 넘어갑니다. 진행 기록이 아직 `develop`에 없으면 진행 중인 자기 브랜치의 것을 읽습니다.

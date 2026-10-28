@@ -21,7 +21,7 @@
 
 - [#22](https://github.com/yim0327/beone-mvp/issues/22) 기기 인증과 60초 활성 상태 — draft [PR #24](https://github.com/yim0327/beone-mvp/pull/24), 독립 리뷰 대기(CodeRabbit 한도), 실기기 확인 대기, 병합 승인 대기 ([단계 기록](22-auth-session.md))
 - [#25](https://github.com/yim0327/beone-mvp/issues/25) WebView 셸 기초 — draft [PR #26](https://github.com/yim0327/beone-mvp/pull/26), 독립 리뷰 대기, 실기기 확인 대기, 병합 승인 대기
-- [#27](https://github.com/yim0327/beone-mvp/issues/27) 브리지 계약 초안(후보) — [PR #28](https://github.com/yim0327/beone-mvp/pull/28), 사용자 결정·리뷰 대기
+- [#27](https://github.com/yim0327/beone-mvp/issues/27) 브리지 계약 초안(후보) — [PR #28](https://github.com/yim0327/beone-mvp/pull/28), CodeRabbit 의견 3건 미반영(보류), 사용자 결정 대기
 
 ## 사용자 확인 사항
 
@@ -32,6 +32,7 @@
 
 ## 다음 작업
 
-- PR #24·#26·#28 독립 리뷰 확인과 지적 사항 반영
+- 새 이슈·기능 생성은 중단했습니다(2026-10-28 사용자 지시). 현재 PR의 리뷰 대응·검증·문서 정리만 합니다.
+- PR #24·#26 독립 리뷰 확인, PR #28 리뷰 의견 반영(해당 작업 공간에서 진행)
 - 병합 뒤: 나중 PR에 `develop`을 merge해 README·architecture 충돌 해결
 - 결정·병합 뒤: 기기 인증과 WebView 연결, 브리지 구현, 계측 테스트(기기 승인 후)

@@ -40,3 +40,10 @@
 - 검증: `assembleDebug testDebugUnitTest lintDebug --rerun-tasks`, `assembleRelease lintRelease --rerun-tasks` 실제 실행, 통과(기준 `0752331`, 미커밋 변경 없음)
 - 남은 제한: CodeRabbit 무료 한도로 리뷰가 시작되지 않아 리뷰 대기입니다. 실기기 확인도 대기입니다.
 - 다음: 독립 작업 #25 WebView 셸 기초
+
+### 2026-10-28 20:50 · 병합 준비 점검 · 리뷰 대기
+- 한 일: 새 작업을 멈추고 PR #24의 상태를 다시 확인했습니다. 마지막 검증 뒤 바뀐 것은 진행 기록 문서뿐입니다.
+- 서비스에서 달라진 점: 없음
+- 검증: `assembleDebug testDebugUnitTest lintDebug --rerun-tasks`, `assembleRelease lintRelease --rerun-tasks` 실제 실행, 통과 44건(기준 `1a7d87d`, 미커밋 변경 없음)
+- 남은 제한: 독립 리뷰 미시작(CodeRabbit 한도), 실기기 확인 대기, 병합 승인 대기
+- 다음: 독립 리뷰가 오면 의견 확인·반영

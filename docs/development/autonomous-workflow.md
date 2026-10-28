@@ -31,7 +31,7 @@
 
 ### 자동으로 하지 않는 일
 
-- 병합, 자동 병합 설정
+- PR 병합(PR을 `develop`·`main`에 병합하는 것), 자동 병합 설정. 위 허용 목록의 `origin/develop` → 자기 feature 브랜치 merge는 여기에 해당하지 않습니다.
 - `develop`·`main` 직접 수정·push
 - 강제 push, 이미 만든 커밋의 이력 변경(rebase·reset·amend), 훅 우회(`--no-verify`)
 - 다른 작업자의 변경, 기존 stash·백업 삭제나 덮어쓰기
@@ -86,12 +86,35 @@
 
 세션을 시작하거나 재개할 때마다 다음을 순서대로 확인합니다.
 
-1. `git fetch origin`(`--prune` 같은 정리 옵션 없이)으로 최신 `origin/develop` SHA를 확인합니다.
+1. `git fetch origin`(`--prune` 같은 정리·삭제 옵션 없이)으로 최신 원격을 확인하고 최신 `origin/develop` SHA를 기록합니다.
    - 이 문서가 최신 `origin/develop`에 없으면 모드를 시작하지 않고 사용자에게 보고합니다.
-2. 열린 이슈와 PR 중 자기 작업선 것의 상태를 확인합니다: 리뷰 의견, 병합 여부, 차단 사유.
-3. 자기 작업선의 진행 기록 `docs/progress/<작업선>/README.md`를 읽습니다. 아직 `develop`에 없으면 진행 중인 자기 브랜치의 것을 읽습니다.
-4. 작업할 worktree의 경로·브랜치·`HEAD`·`git status`를 확인합니다. 출처를 모르는 변경이 있으면 건드리지 않고 기록합니다.
-5. 병합된 PR이 있으면, 그 작업을 이어갈 다음 브랜치를 최신 `origin/develop`에서 새로 만듭니다. squash 병합된 기존 브랜치를 pull·merge·rebase해서 이어가지 않습니다.
+2. 열린 이슈와 PR 중 자기 작업선 것의 상태를 확인합니다: 병합 여부, 진행 중인 작업, 리뷰 의견, 검증 상태, 차단 사유.
+3. 실제로 이어갈 작업과 대상 worktree를 고릅니다.
+   - 병합되지 않은 작업을 재개하면 그 작업의 기존 worktree를 고릅니다.
+   - 병합 뒤 새 작업을 하면 최신 `origin/develop`에서 새 기능 브랜치와 전용 worktree를 만듭니다. squash 병합된 기존 브랜치를 pull·merge·rebase해서 다시 쓰지 않습니다.
+4. 고른 worktree에서 경로·브랜치·`HEAD`·`git status`를 확인합니다.
+   - 출처를 모르는 변경은 건드리지 않고 기록합니다.
+   - 브랜치를 바꾸거나 파일을 덮어써서 문제를 피하지 않습니다.
+5. 그 worktree의 기준 문서 5개를 최신 `origin/develop`과 비교합니다. 이전 작업 공간이나 병합된 옛 브랜치를 비교하지 않습니다.
+   - 대상: `CLAUDE.md`, `docs/development/autonomous-workflow.md`, `docs/development/backend-start.md`, `docs/development/android-start.md`, `docs/decisions.md`
+   - 존재 확인: 파일마다 `origin/develop` 쪽은 `git cat-file -e origin/develop:<파일>`로, 고른 worktree 쪽은 `test -f <파일>`로 따로 확인합니다.
+   - 내용 비교: 다음 명령의 종료 코드로 판단합니다. `0`은 차이 없음, `1`은 차이 있음, 그 밖의 값은 명령·조회 오류입니다.
+
+     ```bash
+     git diff --exit-code origin/develop -- \
+       CLAUDE.md \
+       docs/development/autonomous-workflow.md \
+       docs/development/backend-start.md \
+       docs/development/android-start.md \
+       docs/decisions.md
+     ```
+
+   - 차이 난 파일은 같은 5개 경로를 지정한 `git diff --name-status origin/develop -- <위 5개 파일>`로 확인합니다.
+   - 최신 SHA 확인이나 존재 확인만으로 내용 비교를 대신하지 않습니다.
+   - 파일 누락, 차이, 명령 오류 중 하나라도 있으면 모드를 시작·재개하지 않습니다. 차이 난 파일, 원인, 필요한 다음 행동을 사용자에게 보고합니다. 파일 덮어쓰기·reset·자동 동기화로 우회하지 않으며, 이 점검이 merge 권한을 넓히지 않습니다.
+   - 기존 worktree의 기준 문서가 오래돼 멈추는 것은 의도한 안전 동작입니다.
+   - 이 비교는 장기 연속 개발 모드의 시작·재개에만 적용합니다. 운영 문서 자체를 검토·수정하는 일반 작업은 이 비교로 차단하지 않습니다.
+6. 문서가 일치할 때만 자기 작업선의 진행 기록 `docs/progress/<작업선>/README.md`를 읽고 구현·재개 절차로 넘어갑니다. 진행 기록이 아직 `develop`에 없으면 진행 중인 자기 브랜치의 것을 읽습니다.
 
 ## 5. 반복 절차
 
@@ -183,7 +206,7 @@
 - PR을 만들거나 갱신한 뒤 원격의 head SHA, base, head 브랜치, 본문을 다시 조회해 확인합니다.
 - 리뷰어·담당자는 지정하지 않습니다. 라벨은 2절의 기준을 따릅니다.
 - 이슈를 직접 닫거나 완료 처리하지 않습니다.
-- 병합은 사용자 승인 대기입니다.
+- PR 병합은 사용자 승인 대기입니다.
 
 ## 9. 진행 기록
 

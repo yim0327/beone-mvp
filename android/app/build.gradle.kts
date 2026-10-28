@@ -16,7 +16,15 @@ android {
     }
 
     buildTypes {
+        debug {
+            // 개발 서버 주소. 기기에서는 `adb reverse tcp:5173 tcp:5173`으로 연결한다.
+            val devServerUrl = providers.gradleProperty("beone.devServerUrl").getOrElse("http://localhost:5173/")
+            val escapedUrl = devServerUrl.replace("\\", "\\\\").replace("\"", "\\\"")
+            buildConfigField("String", "WEB_START_URL", "\"$escapedUrl\"")
+        }
         release {
+            // release 로딩 방식과 신뢰 origin은 미확정이다. 정해지기 전까지 비워 두어 아무 페이지도 불러오지 않는다.
+            buildConfigField("String", "WEB_START_URL", "\"\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

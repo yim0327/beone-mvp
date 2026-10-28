@@ -20,11 +20,16 @@ public final class BenefitArithmetic {
 
 	/**
 	 * 건당 할인 대상 금액 상한을 적용한다. 상한을 넘는 부분은 할인 대상이 아니다({@code BenefitService.maximumTargetAmount}).
-	 * 상한이 없으면 거래 금액 전체가 대상이다.
+	 * 상한이 없으면 거래 금액 전체가 대상이다. 상한은 규칙 모델과 같이 0원보다 커야 한다.
 	 */
 	public static Won capTargetAmount(Won transactionAmount, Optional<Won> maximumTargetAmount) {
 		requireNotNegative(transactionAmount, "transaction amount");
 		Objects.requireNonNull(maximumTargetAmount, "maximumTargetAmount");
+		maximumTargetAmount.ifPresent(cap -> {
+			if (!cap.isPositive()) {
+				throw new IllegalArgumentException("maximum target amount must be positive: " + cap.value());
+			}
+		});
 		return maximumTargetAmount.filter(cap -> cap.compareTo(transactionAmount) < 0).orElse(transactionAmount);
 	}
 

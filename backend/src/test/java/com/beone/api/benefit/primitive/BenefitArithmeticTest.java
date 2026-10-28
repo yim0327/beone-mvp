@@ -98,6 +98,16 @@ class BenefitArithmeticTest {
 	}
 
 	@Test
+	void capMustBePositive() {
+		// 0원·음수 상한을 그대로 쓰면 대상 금액이 0원이나 음수가 된다.
+		assertThatThrownBy(() -> BenefitArithmetic.capTargetAmount(Won.of(100), Optional.of(Won.of(-1))))
+			.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> BenefitArithmetic.capTargetAmount(Won.of(100), Optional.of(Won.ZERO)))
+			.isInstanceOf(IllegalArgumentException.class);
+		assertThat(BenefitArithmetic.capTargetAmount(Won.of(100), Optional.of(Won.of(1)))).isEqualTo(Won.of(1));
+	}
+
+	@Test
 	void noCapMeansWholeAmount() {
 		assertThat(BenefitArithmetic.capTargetAmount(Won.of(Long.MAX_VALUE), Optional.empty()))
 			.isEqualTo(Won.of(Long.MAX_VALUE));

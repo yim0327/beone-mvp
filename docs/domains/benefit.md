@@ -108,7 +108,7 @@ RuleCatalog.select()는 규칙 없음 → NO_VERIFIED_RULE, 날짜 불일치 →
 
 규칙 모델(`rule`)에 적힌 값으로 서비스 한 건을 계산·판정하는 순수 함수입니다. Spring·DB·`common.web`에 의존하지 않고, 결과 타입(`result`)이나 아직 정하지 않은 `OrderBenefit`(D-13)과 연결하지 않습니다. 같은 입력이면 항상 같은 값을 돌려주고 입력을 바꾸지 않습니다.
 
-- [BenefitArithmetic](../../backend/src/main/java/com/beone/api/benefit/primitive/BenefitArithmetic.java): 건당 대상 금액 상한 적용(상한 초과분은 대상이 아님), 베이시스 포인트 정률(`금액 × bp ÷ 10,000`), 정액(대상 금액과 관계없이 정해진 금액, D-10). 정액이 결제 금액보다 커도 줄이지 않습니다(줄일지 미정). 음수(취소) 금액은 처리 규칙이 없어 거부합니다.
+- [BenefitArithmetic](../../backend/src/main/java/com/beone/api/benefit/primitive/BenefitArithmetic.java): 건당 대상 금액 상한 적용(상한 초과분은 대상이 아님. 상한은 0원보다 커야 함), 베이시스 포인트 정률(`금액 × bp ÷ 10,000`), 정액(대상 금액과 관계없이 정해진 금액, D-10). 정액이 결제 금액보다 커도 줄이지 않습니다(줄일지 미정). 음수(취소) 금액은 처리 규칙이 없어 거부합니다.
 - [UnroundedWon](../../backend/src/main/java/com/beone/api/benefit/primitive/UnroundedWon.java): 원 미만을 버리지 않은 정확한 금액(정수 원 + 1/10,000원 단위 나머지). hasFractionalWon()으로 원 미만 발생 여부를 알 수 있습니다. 원 미만 처리 방식은 카드별로 확인되지 않았으므로(D-03) 확정된 `FractionalWonPolicy`를 받을 때만 round()로 원 단위 금액을 만듭니다.
 - [ServiceConditions](../../backend/src/main/java/com/beone/api/benefit/primitive/ServiceConditions.java): 최소 금액(같으면 충족, D-10·사례집 C13), 결제 방식, 대상 업종, 제외 업종을 각각 따로 판정합니다. 여러 조건이 함께 미충족일 때 어느 사유를 우선할지는 미결(D-13)이라 정하지 않습니다.
 - [PerformanceTiers](../../backend/src/main/java/com/beone/api/benefit/primitive/PerformanceTiers.java): 확인된 전월 실적으로 서비스 계산 구간과 한도 구간을 고릅니다. 최소 실적 "이상"이면 그 구간입니다. 가장 낮은 구간에도 못 미치면 빈 값이며, 신규 카드 유예 적용 여부는 호출하는 쪽이 판단합니다. 실적 값의 기간이 맞는지는 판정하지 않으며, 음수 실적은 처리 근거가 없어 거부합니다.

@@ -59,6 +59,10 @@ public final class BenefitArithmetic {
 	/**
 	 * 정액 혜택: 대상 거래 한 건당 정해진 금액({@code BenefitCalculation.FixedAmount}). 대상 금액으로 금액이 바뀌지 않는다(D-10).
 	 * 최소 금액 등 적용 조건은 {@link ServiceConditions}에서 따로 판정한다.
+	 *
+	 * <p>
+	 * {@code targetAmount}는 음수인지 확인하는 데만 쓴다. 결과가 대상 금액보다 클 수 있으며, 정액을 결제 금액으로 줄일지는
+	 * 정해지지 않았으므로 여기서 줄이지 않는다.
 	 */
 	public static UnroundedWon fixed(BenefitCalculation.FixedAmount fixed, Won targetAmount) {
 		Objects.requireNonNull(fixed, "fixed");

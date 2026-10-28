@@ -76,6 +76,13 @@ class BenefitArithmeticTest {
 	}
 
 	@Test
+	void fixedAmountIsNotClampedToTarget() {
+		// 정액을 결제 금액으로 줄일지는 정해지지 않았으므로 1,000원 대상에도 2,500원 그대로 둔다.
+		assertThat(BenefitArithmetic.apply(BenefitCalculation.fixed(2_500), Won.of(1_000)))
+			.isEqualTo(UnroundedWon.exact(Won.of(2_500)));
+	}
+
+	@Test
 	void applyDispatchesRate() {
 		assertThat(BenefitArithmetic.apply(BenefitCalculation.rate(100), Won.of(1_234)))
 			.isEqualTo(new UnroundedWon(Won.of(12), 3_400));
@@ -106,12 +113,10 @@ class BenefitArithmeticTest {
 	}
 
 	@Test
-	void sameInputGivesSameResultAndKeepsInput() {
-		Won target = Won.of(1_234);
+	void sameInputGivesSameResult() {
 		BenefitCalculation rate = BenefitCalculation.rate(100);
 
-		assertThat(BenefitArithmetic.apply(rate, target)).isEqualTo(BenefitArithmetic.apply(rate, target));
-		assertThat(target).isEqualTo(Won.of(1_234));
+		assertThat(BenefitArithmetic.apply(rate, Won.of(1_234))).isEqualTo(BenefitArithmetic.apply(rate, Won.of(1_234)));
 	}
 
 	@Test

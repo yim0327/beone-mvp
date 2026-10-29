@@ -52,10 +52,17 @@ public final class CardServiceCandidateCollector {
 	}
 
 	/**
+	 * 규칙 선택 결과의 서비스마다 주문 한 건의 후보를 취합한다. 채택·합계는 정하지 않는다.
+	 *
 	 * @param selection 카드 한 장의 규칙 선택 결과
 	 * @param order 현재 주문
 	 * @param state 같은 카드의 월간 상태
-	 * @throws IllegalArgumentException 카드 ID가 다르거나, 전월 실적이 음수이거나, 선택 결과의 서비스 분리가 규칙과 맞지 않는 경우
+	 * @return 규칙을 쓸 수 없으면 {@link CardServiceCandidates.Unavailable}(서비스 목록·금액 없음),
+	 * 아니면 규칙의 모든 서비스를 정확히 한 분류에 담은 {@link CardServiceCandidates.Collected}
+	 * @throws NullPointerException 입력이 null인 경우
+	 * @throws IllegalArgumentException 카드 ID가 다르거나, 확인된 전월 실적이 음수이거나(규칙 사용 불가·범위 밖 경로 포함),
+	 * 선택 결과의 계산 가능·확인 필요 서비스가 규칙의 서비스를 중복·누락 없이 나누지 않거나 규칙에 없는 서비스를 담았거나,
+	 * 사유 목록이 빈 확인 필요가 있거나, 규칙 선택 단계 확인 필요로 담을 사유에 빈 문구가 있는 경우
 	 */
 	public static CardServiceCandidates collect(RuleSelection selection, Order order, CardMonthlyState state) {
 		Objects.requireNonNull(selection, "selection");

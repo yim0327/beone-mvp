@@ -9,9 +9,6 @@ class VirtualCardActivation(
     private var active: ActivationState.Active? = null
     private var lastInactiveReason: InactiveReason = InactiveReason.NOT_AUTHENTICATED
 
-    var isAuthenticating: Boolean = false
-        private set
-
     val state: ActivationState
         get() {
             val current = active ?: return ActivationState.Inactive(lastInactiveReason)
@@ -27,19 +24,8 @@ class VirtualCardActivation(
         return (current.expiresAtMillis - elapsedRealtimeMillis()).coerceAtLeast(0L)
     }
 
-    // 인증 창을 띄우기 전에 호출한다. 이미 진행 중이면 false를 돌려 중복 요청을 막는다.
-    fun beginAuthentication(): Boolean {
-        if (isAuthenticating) return false
-        isAuthenticating = true
-        return true
-    }
-
-    // 진행 중인 요청이 없을 때 도착한 결과는 무시한다.
+    // 인증 중인 요청의 결과만 넘겨받는다. 어느 요청의 결과인지는 AuthRequestGate가 판정한다.
     fun onAuthOutcome(outcome: AuthOutcome): ActivationState {
-        if (!isAuthenticating) return state
-        if (outcome.isTerminal) {
-            isAuthenticating = false
-        }
         when (outcome) {
             is AuthOutcome.Succeeded -> {
                 // 활성 중 재인증에 성공해도 남은 시간을 더하지 않고 새로 60초를 시작한다.
@@ -58,15 +44,26 @@ class VirtualCardActivation(
     }
 
     // 앱이 백그라운드로 가면 즉시 비활성화한다. 화면 구성 변경은 여기로 오지 않아야 한다.
-    // 진행 중인 요청도 끝내 이탈 뒤 늦게 도착한 성공이 활성화하지 못하게 한다.
-    // 진행 중인 요청이 있었으면 true를 돌려 호출 측이 인증 창을 닫게 한다.
-    fun onAppLeft(): Boolean {
-        val hadPendingRequest = isAuthenticating
-        isAuthenticating = false
-        if (active != null || hadPendingRequest) {
+    // 취소를 요청한 인증이 있었으면 활성 여부와 관계없이 이탈을 비활성 이유로 남긴다.
+    fun onAppLeft(canceledPendingRequest: Boolean) {
+        if (active != null || canceledPendingRequest) {
             deactivate(InactiveReason.LEFT_APP)
         }
-        return hadPendingRequest
+    }
+
+    // 인증 중인 요청이 응답 대기 시간을 넘기면 활성 여부와 관계없이 비활성화한다.
+    fun onNoResponse() {
+        deactivate(InactiveReason.NO_RESPONSE)
+    }
+
+    // 관측 기록용. state와 달리 만료 전이를 일으키지 않고 저장된 값만 읽는다.
+    internal fun traceFields(): List<Pair<String, String>> {
+        val current = active ?: return listOf("activation" to "INACTIVE", "reason" to lastInactiveReason.name)
+        return listOf(
+            "activation" to "ACTIVE",
+            "method" to current.method.name,
+            "expiresAt" to current.expiresAtMillis.toString(),
+        )
     }
 
     private fun deactivate(reason: InactiveReason) {
@@ -95,6 +92,7 @@ enum class InactiveReason {
     AUTH_FAILED,
     AUTH_CANCELED,
     LEFT_APP,
+    NO_RESPONSE,
     SETUP_REQUIRED,
     UNAVAILABLE,
 }

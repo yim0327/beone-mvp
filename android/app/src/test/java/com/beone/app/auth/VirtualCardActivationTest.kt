@@ -1,19 +1,17 @@
 package com.beone.app.auth
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+// 60초 활성 상태 계산만 검증한다. 어느 요청의 결과인지 판정은 AuthRequestGateTest·ViewModel 테스트가 맡는다.
 class VirtualCardActivationTest {
 
     private var now = 1_000_000L
     private val activation = VirtualCardActivation { now }
 
-    private fun authenticate(outcome: AuthOutcome = AuthOutcome.Succeeded(AuthMethod.BIOMETRIC)): ActivationState {
-        assertTrue(activation.beginAuthentication())
-        return activation.onAuthOutcome(outcome)
-    }
+    private fun authenticate(outcome: AuthOutcome = AuthOutcome.Succeeded(AuthMethod.BIOMETRIC)): ActivationState =
+        activation.onAuthOutcome(outcome)
 
     private fun inactive(reason: InactiveReason) = ActivationState.Inactive(reason)
 
@@ -105,19 +103,14 @@ class VirtualCardActivationTest {
     }
 
     @Test
-    fun mismatchDeactivatesButKeepsPromptOpenForRetry() {
+    fun mismatchDeactivatesAndLaterSuccessActivatesAgain() {
         authenticate()
-        assertTrue(activation.beginAuthentication())
 
         val state = activation.onAuthOutcome(AuthOutcome.Mismatch)
 
         assertEquals(inactive(InactiveReason.AUTH_FAILED), state)
-        assertTrue(activation.isAuthenticating)
-        assertFalse(activation.beginAuthentication())
-
         activation.onAuthOutcome(AuthOutcome.Succeeded(AuthMethod.BIOMETRIC))
         assertEquals(60_000L, activation.remainingMillis())
-        assertFalse(activation.isAuthenticating)
     }
 
     @Test
@@ -125,7 +118,6 @@ class VirtualCardActivationTest {
         val state = authenticate(AuthOutcome.SetupRequired)
 
         assertEquals(inactive(InactiveReason.SETUP_REQUIRED), state)
-        assertFalse(activation.isAuthenticating)
     }
 
     @Test
@@ -140,7 +132,7 @@ class VirtualCardActivationTest {
         authenticate()
         now += 5_000L
 
-        activation.onAppLeft()
+        activation.onAppLeft(canceledPendingRequest = false)
 
         assertEquals(inactive(InactiveReason.LEFT_APP), activation.state)
         now -= 5_000L
@@ -150,7 +142,7 @@ class VirtualCardActivationTest {
     @Test
     fun returningAfterLeavingRequiresNewAuthentication() {
         authenticate()
-        activation.onAppLeft()
+        activation.onAppLeft(canceledPendingRequest = false)
         now += 1_000L
 
         assertEquals(inactive(InactiveReason.LEFT_APP), activation.state)
@@ -164,75 +156,28 @@ class VirtualCardActivationTest {
         now += 60_000L
         activation.state
 
-        activation.onAppLeft()
+        activation.onAppLeft(canceledPendingRequest = false)
 
         assertEquals(inactive(InactiveReason.EXPIRED), activation.state)
     }
 
     @Test
-    fun duplicateAuthenticationRequestIsRejectedWhileInProgress() {
-        assertTrue(activation.beginAuthentication())
+    fun leavingAppWithCanceledRequestRecordsLeftAppEvenWhenInactive() {
+        authenticate(AuthOutcome.Mismatch)
 
-        assertFalse(activation.beginAuthentication())
-        assertTrue(activation.isAuthenticating)
-    }
-
-    @Test
-    fun newRequestIsAllowedAfterTerminalOutcome() {
-        authenticate(AuthOutcome.Canceled(errorCode = 10))
-
-        assertTrue(activation.beginAuthentication())
-    }
-
-    @Test
-    fun outcomeWithoutPendingRequestIsIgnored() {
-        val state = activation.onAuthOutcome(AuthOutcome.Succeeded(AuthMethod.BIOMETRIC))
-
-        assertEquals(inactive(InactiveReason.NOT_AUTHENTICATED), state)
-    }
-
-    @Test
-    fun lateSuccessAfterTerminalOutcomeDoesNotActivate() {
-        authenticate(AuthOutcome.Canceled(errorCode = 5))
-
-        activation.onAuthOutcome(AuthOutcome.Succeeded(AuthMethod.BIOMETRIC))
-
-        assertEquals(inactive(InactiveReason.AUTH_CANCELED), activation.state)
-    }
-
-    @Test
-    fun leavingAppDuringAuthenticationEndsRequestAndIgnoresLateSuccess() {
-        assertTrue(activation.beginAuthentication())
-
-        assertTrue(activation.onAppLeft())
-        activation.onAuthOutcome(AuthOutcome.Succeeded(AuthMethod.BIOMETRIC))
-
-        assertEquals(inactive(InactiveReason.LEFT_APP), activation.state)
-        assertFalse(activation.isAuthenticating)
-    }
-
-    @Test
-    fun systemCancelAfterLeavingKeepsLeftAppReason() {
-        assertTrue(activation.beginAuthentication())
-        activation.onAppLeft()
-
-        activation.onAuthOutcome(AuthOutcome.Canceled(errorCode = 5))
+        activation.onAppLeft(canceledPendingRequest = true)
 
         assertEquals(inactive(InactiveReason.LEFT_APP), activation.state)
     }
 
     @Test
-    fun newRequestIsAllowedAfterReturningFromLeave() {
-        assertTrue(activation.beginAuthentication())
-        activation.onAppLeft()
-
-        assertTrue(activation.beginAuthentication())
-    }
-
-    @Test
-    fun leavingWithoutPendingRequestReportsNothingToCancel() {
+    fun noResponseDeactivatesEvenWhileActive() {
         authenticate()
+        now += 10_000L
 
-        assertFalse(activation.onAppLeft())
+        activation.onNoResponse()
+
+        assertEquals(inactive(InactiveReason.NO_RESPONSE), activation.state)
+        assertEquals(0L, activation.remainingMillis())
     }
 }

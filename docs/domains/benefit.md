@@ -4,7 +4,7 @@
 
 `benefit`은 카드 혜택 계산과 추천에 필요한 식별자, 금액, 상태, 입력, 약관 규칙, 결과를 정의합니다. 값만 담는 것이 아니라 잘못된 조합을 생성 시점에 차단하고, 모르는 정보는 확인 필요 상태로 유지합니다.
 
-현재는 도메인 모델과 규칙 선택·보조 검증 로직, 그리고 서비스 한 건의 산식·조건을 따로따로 판정하는 기본 함수(`primitive`)가 구현되어 있습니다. 이 함수들을 묶어 주문 한 건의 카드별 혜택을 내는 계산, 월간 최적화, 추천 API, CODEF 호출은 아직 구현되지 않았습니다.
+현재는 도메인 모델과 규칙 선택·보조 검증 로직, 서비스 한 건의 산식·조건을 따로따로 판정하는 기본 함수(`primitive`), 그리고 이 함수들로 한도 없는 비선택형 서비스 하나의 후보(`ServiceCandidate`)를 만드는 판정기(`ServiceCandidateEvaluator`, #31)가 구현되어 있습니다. 서비스 후보를 묶어 주문 한 건의 카드별 혜택을 내는 계산, 월간 최적화, 추천 API, CODEF 호출은 아직 구현되지 않았습니다.
 
 ## 핵심 용어
 
@@ -24,7 +24,7 @@ benefit/
 ├── state/   값의 출처·기준 기간·갱신 시각
 ├── input/   계산에 필요한 주문·카드·거래·선택 설정
 ├── rule/      약관 규칙과 검증 규칙 선택
-├── primitive/ 서비스 한 건의 산식과 개별 조건 판정
+├── primitive/ 서비스 한 건의 산식·개별 조건 판정과 단일 서비스 후보 판정
 └── result/    카드별 혜택과 최종 추천 결과
 ```
 
@@ -104,9 +104,9 @@ CODEF·수동 입력·추론 값에는 갱신 시각이 필요합니다. 추론 
 
 RuleCatalog.select()는 규칙 없음 → NO_VERIFIED_RULE, 날짜 불일치 → RULE_EXPIRED, 유효하지만 미검증 → NO_VERIFIED_RULE, 유효한 VERIFIED 존재 → Selected 순서로 판단합니다. 계산 가능 서비스라는 표현은 규칙 자체의 차단 조건이 없다는 의미이며 현재 주문의 실적·업종·한도 조건 충족까지 보장하지 않습니다.
 
-### primitive: 산식과 개별 조건 판정
+### primitive: 산식·개별 조건 판정과 단일 서비스 후보 판정
 
-규칙 모델(`rule`)에 적힌 값으로 서비스 한 건을 계산·판정하는 순수 함수입니다. Spring·DB·`common.web`에 의존하지 않고, 결과 타입(`result`)이나 아직 정하지 않은 `OrderBenefit`(D-13)과 연결하지 않습니다. 같은 입력이면 항상 같은 값을 돌려주고 입력을 바꾸지 않습니다.
+규칙 모델(`rule`)에 적힌 값으로 서비스 한 건을 계산·판정하는 순수 함수입니다. Spring·DB·`common.web`에 의존하지 않습니다. 결과 타입(`result`)과는 `ServiceCandidateEvaluator`가 `ServiceCandidate`를 만드는 것만 연결되며, 아직 정하지 않은 `OrderBenefit`(D-13)과는 연결하지 않습니다. 같은 입력이면 항상 같은 값을 돌려주고 입력을 바꾸지 않습니다.
 
 - [BenefitArithmetic](../../backend/src/main/java/com/beone/api/benefit/primitive/BenefitArithmetic.java): 건당 대상 금액 상한 적용(상한 초과분은 대상이 아님. 상한은 0원보다 커야 함), 베이시스 포인트 정률(`금액 × bp ÷ 10,000`), 정액(대상 금액과 관계없이 정해진 금액, D-10). 정액이 결제 금액보다 커도 줄이지 않습니다(줄일지 미정). 음수(취소) 금액은 처리 규칙이 없어 거부합니다.
 - [UnroundedWon](../../backend/src/main/java/com/beone/api/benefit/primitive/UnroundedWon.java): 원 미만을 버리지 않은 정확한 금액(정수 원 + 1/10,000원 단위 나머지). hasFractionalWon()으로 원 미만 발생 여부를 알 수 있습니다. 원 미만 처리 방식은 카드별로 확인되지 않았으므로(D-03) 확정된 `FractionalWonPolicy`를 받을 때만 round()로 원 단위 금액을 만듭니다.
@@ -122,7 +122,34 @@ if (raw.hasFractionalWon()) {
 }
 ```
 
-한도 차감·잔여 한도, 중복 적용, 서비스 간 채택, 기간 판정, 월 1회 제한, 신규 유예는 이 패키지에 없습니다.
+한도 차감·잔여 한도, 중복 적용, 서비스 간 채택, 기간 판정, 월 1회 제한, 신규 유예의 간주 실적 적용은 이 패키지에 없습니다.
+
+#### ServiceCandidateEvaluator: 단일 서비스 후보 판정(#31)
+
+[ServiceCandidateEvaluator](../../backend/src/main/java/com/beone/api/benefit/primitive/ServiceCandidateEvaluator.java)의 `evaluate(service, order, previousMonthPerformance, newCardGrace)`는 위 함수들을 묶어 "주문 한 건에서 이 서비스 하나만 고를 때의 후보"(`ServiceCandidate`)를 만듭니다. 서비스 간 채택·기여액(`Adoption`·`OrderServiceBenefit`)은 정하지 않습니다.
+
+- 지원 범위: 한도 버킷(`limitBuckets`)이 비어 있는, 즉 약관상 한도가 없는 비선택형 서비스. 한도 버킷이 하나라도 있거나 선택형(`requiresSelection`)이면 범위 밖이므로 `IllegalArgumentException`으로 거부합니다. 범위 안에서 근거가 부족하면 거부하지 않고 확인 필요 금액을 돌려줍니다.
+- 호출자 전제 조건: 규칙 버전 선택은 끝난 상태입니다(예: `RuleCatalog`가 고른 계산 가능 서비스). 빈 `limitBuckets`는 약관상 한도 없음이 확인된 서비스에만 씁니다. 모델은 한도 정보 누락과 한도 없음을 구분하지 않으므로, 한도 정보가 확인되지 않은 서비스를 넘기지 않는 것은 호출자 책임입니다. 전월 실적은 호출자가 이 카드의 실적 기간에 맞는다고 보증한 값이며, 판정기는 원장에서 산출하거나 기간을 확인하지 않습니다. 신규 유예 근거(`TriggerEvidence`)는 호출자가 이 서비스에 대해 정합니다. 카드가 유예 기간이 아니거나 유예가 이 서비스에 적용되지 않음을 확인했을 때만 `CONFIRMED_ABSENT`입니다.
+- 입력 계약: null 입력과 음수 전월 실적은 거부합니다. 음수 실적은 다른 조건이 미충족이어도 거부합니다. 주문 금액이 0원 이하인 주문은 `Order`가 생성 시 거부합니다.
+
+판정 순서는 다음과 같습니다.
+
+1. 제외 업종·대상 업종·결제 방식·최소 금액·실적 구간을 각각 판정해 확인된 미충족 사유를 순서 없는 집합으로 모읍니다. 사유가 하나라도 있으면 다른 근거가 미확정이어도 후보 금액은 확정 0원입니다.
+2. 실적이 가장 낮은 구간에도 못 미칠 때 실적 미충족(`NOT_APPLICABLE_PERFORMANCE`)은 신규 유예 근거가 `CONFIRMED_ABSENT`일 때만 확정합니다. 유예는 실적을 간주 실적 이상으로 올려 보므로, 근거가 `PRESENT`·`UNDETERMINED`이면 실적 부족은 확인 필요이고, 최상위가 아닌 구간에 도달한 경우도 더 높은 구간이 될 수 있어 확인 필요입니다. 이는 `ConditionalTerm`·`NewCardGrace`의 기존 계약을 적용한 것이며 새 금융 정책이 아닙니다. 최상위 구간에 도달했거나 실적 조건이 없는 서비스는 유예 근거와 관계없이 계산합니다.
+3. 미충족이 없으면 확인 필요 사유를 봅니다. 확인 필요 사유는 `unmetConditions`에 넣지 않고 `BenefitAmount.NeedsConfirmation`의 사유 문자열에 모읍니다.
+   - 계산식 미확정(`BenefitService.unresolvedCalculationReasons()`가 비어 있지 않음): 다른 식으로 대체하지 않습니다.
+   - 정액이 주문 결제 금액보다 큼: 결제 금액으로 줄이거나 0원·초과 금액으로 확정하지 않습니다. 같으면 확정입니다.
+   - 원 미만: 계산 결과에 실제로 원 미만이 생겼을 때만 `fractionalWon`을 봅니다. 확정이면 그 방식으로 처리하고, 미확정이면 확인 필요입니다. 원 미만이 없으면 처리 방식 미확정만으로 막지 않습니다(`ConditionalTerm.mayBeDisregarded`).
+4. 위에 걸리지 않으면 (상한을 적용한 대상 금액으로) 계산한 금액을 확정합니다.
+
+중복 적용 조건(`stackableWith`)은 서비스 하나만 고를 때의 후보에는 영향을 주지 않으므로 판정하지 않습니다. 중복·채택은 후속 단계의 책임입니다.
+
+```java
+// 합성 예시: 한도 없는 비선택형 서비스, 0원 구간 1%, 원 미만 처리 미확정
+ServiceCandidate candidate = ServiceCandidateEvaluator.evaluate(service, order, Won.of(300_000),
+		TriggerEvidence.CONFIRMED_ABSENT);
+// 10,000원 주문 → 확정 100원. 10,001원 주문(100.01원)이면 원 미만 처리 미확정으로 확인 필요
+```
 
 ### result: 결과와 설명 근거
 
@@ -136,7 +163,7 @@ if (raw.hasFractionalWon()) {
 - [RecommendationOutcome](../../backend/src/main/java/com/beone/api/benefit/result/RecommendationOutcome.java): Selected 선택 결과 또는 NotDetermined 추천 불가 사유. Selected는 선택 근거, 동률 카드, 차순위와의 차이, 조건부 여부를 담습니다.
 - [SelectionBasis](../../backend/src/main/java/com/beone/api/benefit/result/SelectionBasis.java): 월 총혜택 → 현재 주문 혜택 → 대표 카드 → 카드 ID 순서의 선택 근거를 표현합니다. 대표 카드·ID 선택은 혜택 우월성을 뜻하지 않는 임의 동률 규칙입니다.
 
-`ServiceCandidate`·`OrderServiceBenefit`은 기존 `ServiceBenefit`과 별개입니다. 이 타입들은 아직 `CardBenefit`이나 `OrderBenefit`(미구현)에 연결되지 않았고, 채택 여부나 기여액을 계산·추론하지 않습니다. 미확정 금액을 0원으로 바꾸는 경로도 없습니다.
+`ServiceCandidate`·`OrderServiceBenefit`은 기존 `ServiceBenefit`과 별개입니다. `ServiceCandidate`는 `ServiceCandidateEvaluator`가 만들 수 있지만, 이 타입들은 아직 `CardBenefit`이나 `OrderBenefit`(미구현)에 연결되지 않았고, 채택 여부나 기여액을 계산·추론하지 않습니다. 미확정 금액을 0원으로 바꾸는 경로도 없습니다.
 
 ```java
 ServiceCandidate candidate = new ServiceCandidate(ServiceId.of("SYN-SVC"), BenefitAmount.confirmed(1_000), Set.of());
@@ -150,7 +177,7 @@ new OrderServiceBenefit(candidate, Adoption.NOT_ADOPTED, BenefitAmount.confirmed
 
 1. Order, HeldCard, Ledger, CardMonthlyState 등을 RecommendationInput으로 묶습니다.
 2. RuleCatalog가 판단 날짜에 적용 가능한 검증 규칙을 선택합니다.
-3. 미확정 약관과 입력 상태를 고려해 혜택을 계산하고 월간 후보를 비교합니다. 서비스 한 건의 산식·개별 조건 판정은 `primitive`에 있지만, 이를 묶는 **엔진은 후속 구현입니다.**
+3. 미확정 약관과 입력 상태를 고려해 혜택을 계산하고 월간 후보를 비교합니다. 서비스 한 건의 산식·개별 조건 판정과 한도 없는 비선택형 서비스의 단일 후보 판정은 `primitive`에 있지만, 후보를 묶어 카드별 혜택을 내는 **엔진은 후속 구현입니다.**
 4. 계산 로직이 ServiceBenefit(또는 후보·채택·기여액을 나눈 ServiceCandidate·OrderServiceBenefit), CardBenefit, Recommendation을 구성합니다. 현재 구현은 결과를 담는 모델과 일관성 검사입니다.
 
 ## 짧은 코드 예시
@@ -181,7 +208,7 @@ RuleTerm<FractionalWonPolicy> rounding = RuleTerm.unresolved("공식 근거 확�
 
 ## 현재 구현 범위와 관련 문서
 
-구현된 범위는 위 모델, 생성 시 일관성 검사, 규칙 선택, 일부 기간·취소 증거 보조 로직, 서비스 한 건의 산식·개별 조건 판정, 서비스 후보·채택·기여액 결과 타입입니다. 계산·최적화 엔진과 외부 연동은 별도 구현이 필요합니다. `primitive` 테스트는 가상 업종·서비스의 합성 값이며 실제 카드 약관 검증이나 평가 통과를 뜻하지 않습니다.
+구현된 범위는 위 모델, 생성 시 일관성 검사, 규칙 선택, 일부 기간·취소 증거 보조 로직, 서비스 한 건의 산식·개별 조건 판정, 한도 없는 비선택형 서비스의 단일 후보 판정, 서비스 후보·채택·기여액 결과 타입입니다. 계산·최적화 엔진과 외부 연동은 별도 구현이 필요합니다. `primitive` 테스트는 가상 업종·서비스의 합성 값이며 실제 카드 약관 검증이나 평가 통과를 뜻하지 않습니다.
 
 테스트는 [benefit 테스트 디렉터리](../../backend/src/test/java/com/beone/api/benefit/)에서 확인합니다. fixture 매핑 테스트를 계산 결과 검증으로 혼동하지 않습니다. 이 문서 작성 과정에서는 테스트를 실행하지 않았습니다.
 

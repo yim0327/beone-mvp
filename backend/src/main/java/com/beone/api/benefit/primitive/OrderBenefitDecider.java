@@ -1,0 +1,244 @@
+package com.beone.api.benefit.primitive;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import com.beone.api.benefit.card.ServiceId;
+import com.beone.api.benefit.input.CardMonthlyState;
+import com.beone.api.benefit.input.Order;
+import com.beone.api.benefit.input.PolicyTermEvidence;
+import com.beone.api.benefit.money.BenefitAmount;
+import com.beone.api.benefit.result.Adoption;
+import com.beone.api.benefit.result.ApplicationStatus;
+import com.beone.api.benefit.result.CardServiceCandidates;
+import com.beone.api.benefit.result.OrderBenefit;
+import com.beone.api.benefit.result.OrderServiceBenefit;
+import com.beone.api.benefit.result.PendingReason;
+import com.beone.api.benefit.result.PerformanceRecheck;
+import com.beone.api.benefit.result.ServiceCandidate;
+import com.beone.api.benefit.result.ServiceNeedingConfirmation;
+import com.beone.api.benefit.result.UnsupportedService;
+import com.beone.api.benefit.rule.BenefitService;
+import com.beone.api.benefit.rule.ConditionalTerm;
+import com.beone.api.benefit.rule.RuleSelection;
+import com.beone.api.benefit.rule.RuleTerm;
+import com.beone.api.benefit.rule.TriggerEvidence;
+
+/**
+ * 카드 한 장·주문 한 건의 서비스별 최종 채택·기여액과 카드 금액을 정한다(#35, D-13).
+ *
+ * <p>
+ * {@link CardServiceCandidateCollector}로 후보를 취합한 뒤 아래 순서로 판단한다. 규칙 선택({@code RuleCatalog.select})은 호출하지 않는다.
+ * <ol>
+ * <li>실적과 무관한 미충족(제외 업종·업종·결제 방식·최소 금액)이 있는 후보: {@code NOT_ADOPTED}·확정 0원.</li>
+ * <li>나머지 후보는 실적 정책 영향을 본다. 서비스에 실적 조건이 있고, 원본 {@code unresolvedConditionalTerms}에 취소 귀속·할인 매출
+ * 실적 제외 조건이 있으며, 그 근거가 {@code CONFIRMED_ABSENT}가 아니면 영향이 있다고 본다.</li>
+ * <li>실적 미충족만 있는 후보와 미충족 사유 없는 확정 0원 후보: 영향이 있으면 재확인 대상, 없으면 {@code NOT_ADOPTED}·확정 0원.</li>
+ * <li>양수 후보: 영향이 있으면 실적 정책 사유를 남긴다.</li>
+ * <li>막는 사유를 모두 모은다: 확인 필요·지원 범위 밖 서비스, 실적 정책 영향, 양수 후보 쌍의 중복 관계 미확정·중복 허용 확정.</li>
+ * <li>사유가 없으면 양수 후보 중 금액이 가장 크고 같으면 서비스 ID가 가장 앞선 하나만 채택한다. 사유가 있으면 양수 후보는 모두
+ * {@code UNDETERMINED}이고 기여액과 카드 금액은 {@code 확인 필요}다.</li>
+ * </ol>
+ * 결과는 입력·컬렉션 순서와 무관하게 서비스 ID 순으로 정렬한다. 원본 취합 결과와 그 조건부 조건은 바꾸지 않고 보존한다.
+ */
+public final class OrderBenefitDecider {
+
+	/** 실적 미충족 외의 미충족. 하나라도 있으면 실적이 바뀌어도 확정 0원이다. */
+	private static final Set<ApplicationStatus> PERFORMANCE_INDEPENDENT_UNMET = EnumSet.of(
+			ApplicationStatus.NOT_APPLICABLE_EXCLUDED, ApplicationStatus.NOT_APPLICABLE_CATEGORY,
+			ApplicationStatus.NOT_APPLICABLE_MIN_AMOUNT, ApplicationStatus.NOT_APPLICABLE_PAYMENT_METHOD);
+
+	private OrderBenefitDecider() {
+	}
+
+	/**
+	 * 카드 한 장의 주문 혜택을 정한다.
+	 *
+	 * @param selection 카드 한 장의 규칙 선택 결과
+	 * @param order 현재 주문
+	 * @param state 같은 카드의 월간 상태
+	 * @param evidence 같은 카드의 취소 귀속·할인 매출 근거. 실적 기간 적합성은 호출자 책임이다
+	 * @return 규칙을 쓸 수 없으면 {@link OrderBenefit.Unavailable}, 아니면 {@link OrderBenefit.Decided}
+	 * @throws NullPointerException 입력이 null인 경우
+	 * @throws IllegalArgumentException 근거의 카드가 규칙 선택 결과의 카드와 다르거나, 후보 취합기가 거부하는 입력인 경우
+	 * @throws IllegalStateException 지원 범위 서비스에서 나올 수 없는 한도 소진 후보를 받은 경우
+	 */
+	public static OrderBenefit decide(RuleSelection selection, Order order, CardMonthlyState state,
+			PolicyTermEvidence evidence) {
+		Objects.requireNonNull(selection, "selection");
+		Objects.requireNonNull(order, "order");
+		Objects.requireNonNull(state, "state");
+		Objects.requireNonNull(evidence, "evidence");
+		if (!evidence.cardId().equals(selection.cardId())) {
+			throw new IllegalArgumentException(
+					"policy evidence card " + evidence.cardId() + " does not match rule selection card " + selection.cardId());
+		}
+		return switch (CardServiceCandidateCollector.collect(selection, order, state)) {
+			case CardServiceCandidates.Unavailable unavailable -> new OrderBenefit.Unavailable(unavailable.cardId(),
+					unavailable.status(), unavailable.reason());
+			case CardServiceCandidates.Collected collected -> decided((RuleSelection.Selected) selection, collected,
+					evidence);
+		};
+	}
+
+	private static OrderBenefit.Decided decided(RuleSelection.Selected selection,
+			CardServiceCandidates.Collected source, PolicyTermEvidence evidence) {
+		Map<ServiceId, BenefitService> servicesById = selection.rule()
+			.services()
+			.stream()
+			.collect(Collectors.toMap(BenefitService::id, Function.identity()));
+		List<String> policyTerms = affectingPolicyTerms(source, evidence);
+
+		List<ServiceCandidate> candidates = source.candidates()
+			.stream()
+			.sorted(Comparator.comparing(ServiceCandidate::serviceId, PendingReason.SERVICE_ORDER))
+			.toList();
+		List<OrderServiceBenefit> settled = new ArrayList<>();
+		List<ServiceCandidate> positives = new ArrayList<>();
+		List<PerformanceRecheck> rechecks = new ArrayList<>();
+		List<PendingReason> reasons = new ArrayList<>();
+		for (ServiceCandidate candidate : candidates) {
+			Set<ApplicationStatus> unmet = candidate.unmetConditions();
+			if (unmet.contains(ApplicationStatus.LIMIT_EXHAUSTED)) {
+				throw new IllegalStateException("service " + candidate.serviceId()
+						+ " is LIMIT_EXHAUSTED, which supported services cannot produce");
+			}
+			// 1) 실적과 무관한 미충족은 실적 정책과 관계없이 확정 0원이다.
+			if (unmet.stream().anyMatch(PERFORMANCE_INDEPENDENT_UNMET::contains)) {
+				settled.add(notAdopted(candidate));
+				continue;
+			}
+			// 2) 실적 정책 조건이 이 서비스의 실적 충족·구간·금액을 바꿀 수 있는지
+			boolean affected = servicesById.get(candidate.serviceId()).hasPerformanceRequirement()
+					&& !policyTerms.isEmpty();
+			if (affected) {
+				reasons.add(new PendingReason(PendingReason.Kind.PERFORMANCE_POLICY, List.of(candidate.serviceId()),
+						"service " + candidate.serviceId() + " depends on prior performance affected by "
+								+ String.join("; ", policyTerms)));
+			}
+			boolean positive = candidate.standaloneAmount().confirmedWon().isPositive();
+			if (positive) {
+				positives.add(candidate);
+			}
+			else if (affected) {
+				// 3) 실적 미충족만 있거나 사유 없는 0원이지만 정책 조건에 따라 달라질 수 있다.
+				rechecks.add(new PerformanceRecheck(candidate, policyTerms));
+			}
+			else {
+				settled.add(notAdopted(candidate));
+			}
+		}
+		for (ServiceNeedingConfirmation pending : source.needingConfirmation()) {
+			reasons.add(new PendingReason(PendingReason.Kind.NEEDS_CONFIRMATION, List.of(pending.serviceId()),
+					"service " + pending.serviceId() + " needs confirmation at " + pending.stage() + ": "
+							+ String.join("; ", pending.reasons())));
+		}
+		for (UnsupportedService unsupported : source.unsupported()) {
+			reasons.add(new PendingReason(PendingReason.Kind.UNSUPPORTED, List.of(unsupported.serviceId()),
+					unsupportedDetail(unsupported)));
+		}
+		reasons.addAll(stackingReasons(positives, servicesById));
+		reasons.sort(PendingReason.ORDER);
+
+		List<OrderServiceBenefit> services = new ArrayList<>(settled);
+		BenefitAmount orderBenefit;
+		if (reasons.isEmpty()) {
+			// 4) 막는 사유가 없으면 양수 후보끼리 모두 중복 불가로 확정된 상태다. 최댓값, 같으면 서비스 ID가 앞선 하나만 채택한다.
+			Optional<ServiceCandidate> best = positives.stream()
+				.min(Comparator.comparing((ServiceCandidate candidate) -> candidate.standaloneAmount().confirmedWon())
+					.reversed()
+					.thenComparing(ServiceCandidate::serviceId, PendingReason.SERVICE_ORDER));
+			for (ServiceCandidate candidate : positives) {
+				services.add(candidate.equals(best.get())
+						? new OrderServiceBenefit(candidate, Adoption.ADOPTED, candidate.standaloneAmount())
+						: notAdopted(candidate));
+			}
+			orderBenefit = best.map(ServiceCandidate::standaloneAmount).orElse(BenefitAmount.confirmed(0));
+		}
+		else {
+			BenefitAmount pending = BenefitAmount.needsConfirmation(pendingSummary(reasons));
+			for (ServiceCandidate candidate : positives) {
+				services.add(new OrderServiceBenefit(candidate, Adoption.UNDETERMINED, pending));
+			}
+			orderBenefit = pending;
+		}
+		services.sort(Comparator.comparing(service -> service.candidate().serviceId(), PendingReason.SERVICE_ORDER));
+		return new OrderBenefit.Decided(source, services, rechecks, reasons, orderBenefit);
+	}
+
+	/**
+	 * 원본 조건부 조건 중 실적 정책(취소 귀속·할인 매출 실적 제외)이면서 근거로 무시할 수 없는 조건의 설명.
+	 */
+	private static List<String> affectingPolicyTerms(CardServiceCandidates.Collected source,
+			PolicyTermEvidence evidence) {
+		List<String> terms = new ArrayList<>();
+		for (ConditionalTerm term : source.unresolvedConditionalTerms()) {
+			Optional<TriggerEvidence> found = evidence.evidenceFor(term.trigger());
+			if (found.isPresent() && !term.mayBeDisregarded(found.get())) {
+				terms.add(term.name() + ": " + term.reason() + " (evidence " + found.get() + ")");
+			}
+		}
+		return List.copyOf(terms);
+	}
+
+	/**
+	 * 양수 후보 쌍마다 중복 관계를 본다. 양쪽이 확정이고 서로를 적지 않았을 때만 중복 불가로 확정한다.
+	 */
+	private static List<PendingReason> stackingReasons(List<ServiceCandidate> positives,
+			Map<ServiceId, BenefitService> servicesById) {
+		List<PendingReason> reasons = new ArrayList<>();
+		for (int i = 0; i < positives.size(); i++) {
+			for (int j = i + 1; j < positives.size(); j++) {
+				BenefitService left = servicesById.get(positives.get(i).serviceId());
+				BenefitService right = servicesById.get(positives.get(j).serviceId());
+				List<ServiceId> pair = List.of(left.id(), right.id());
+				RuleTerm<Set<ServiceId>> leftTerm = left.stackableWith();
+				RuleTerm<Set<ServiceId>> rightTerm = right.stackableWith();
+				if (!leftTerm.isResolved() || !rightTerm.isResolved()) {
+					reasons.add(new PendingReason(PendingReason.Kind.STACKING_UNRESOLVED, pair,
+							"stacking of " + left.id() + " and " + right.id() + " is not confirmed"));
+					continue;
+				}
+				boolean leftLists = leftTerm.resolvedValue().contains(right.id());
+				boolean rightLists = rightTerm.resolvedValue().contains(left.id());
+				if (leftLists && rightLists) {
+					reasons.add(new PendingReason(PendingReason.Kind.STACKING_CONFIRMED, pair, "stacking of " + left.id()
+							+ " and " + right.id() + " is allowed, but stacked amounts are out of scope"));
+				}
+				else if (leftLists || rightLists) {
+					reasons.add(new PendingReason(PendingReason.Kind.STACKING_UNRESOLVED, pair, "stacking of " + left.id()
+							+ " and " + right.id() + " is listed on one side only"));
+				}
+			}
+		}
+		return reasons;
+	}
+
+	private static String unsupportedDetail(UnsupportedService unsupported) {
+		String detail = "service " + unsupported.serviceId() + " is not decided by this feature: "
+				+ unsupported.reasons().stream().map(Enum::name).sorted().collect(Collectors.joining(", "));
+		if (!unsupported.selectionReasons().isEmpty()) {
+			detail += "; rule selection: " + String.join("; ", unsupported.selectionReasons());
+		}
+		return detail;
+	}
+
+	private static String pendingSummary(List<PendingReason> reasons) {
+		return "order benefit needs confirmation: " + reasons.stream()
+			.map(reason -> reason.kind() + " " + reason.services())
+			.collect(Collectors.joining(", "));
+	}
+
+	private static OrderServiceBenefit notAdopted(ServiceCandidate candidate) {
+		return new OrderServiceBenefit(candidate, Adoption.NOT_ADOPTED, BenefitAmount.confirmed(0));
+	}
+
+}

@@ -62,7 +62,7 @@ public final class CardServiceCandidateCollector {
 	 * @throws NullPointerException 입력이 null인 경우
 	 * @throws IllegalArgumentException 카드 ID가 다르거나, 확인된 전월 실적이 음수이거나(규칙 사용 불가·범위 밖 경로 포함),
 	 * 선택 결과의 계산 가능·확인 필요 서비스가 규칙의 서비스를 중복·누락 없이 나누지 않거나 규칙에 없는 서비스를 담았거나,
-	 * 사유 목록이 빈 확인 필요가 있거나, 규칙 선택 단계 확인 필요로 담을 사유에 빈 문구가 있는 경우
+	 * 선택 결과의 확인 필요 사유 목록이 비었거나 공백 문구가 있는 경우(지원 범위 밖으로 분류되는 서비스 포함)
 	 */
 	public static CardServiceCandidates collect(RuleSelection selection, Order order, CardMonthlyState state) {
 		Objects.requireNonNull(selection, "selection");
@@ -172,6 +172,14 @@ public final class CardServiceCandidateCollector {
 			Set<ServiceId> missing = new HashSet<>(ruleIds);
 			missing.removeAll(seen);
 			throw new IllegalArgumentException("rule selection does not classify services " + missing);
+		}
+		// 공백 사유 검사는 기존 불일치 검사의 예외 순서를 바꾸지 않도록 마지막에 둔다.
+		for (Map.Entry<ServiceId, List<String>> entry : selected.servicesNeedingConfirmation().entrySet()) {
+			for (String reason : entry.getValue()) {
+				if (reason.isBlank()) {
+					throw new IllegalArgumentException("service " + entry.getKey() + " has a blank confirmation reason");
+				}
+			}
 		}
 	}
 

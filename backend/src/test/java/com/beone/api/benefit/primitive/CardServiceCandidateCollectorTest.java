@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +18,8 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.beone.api.benefit.card.CardId;
 import com.beone.api.benefit.card.LimitBucketId;
@@ -337,6 +340,42 @@ class CardServiceCandidateCollectorTest {
 			assertClassifiesExactlyOnce(result, rule);
 		}
 
+		@Test
+		void keepsValidSelectionReasonsVerbatimAndInOrder() {
+			BenefitService base = rate("SYN-BASE", 100);
+			CardRuleVersion rule = rule(resolvedPolicy(),
+					List.of(base, limited("SYN-LIMITED"), selectable("SYN-SELECT")));
+			List<String> limitedReasons = List.of("synthetic: b", "synthetic: a", "synthetic: c");
+			List<String> selectReasons = List.of("synthetic: only");
+
+			CardServiceCandidates.Collected result = collect(new RuleSelection.Selected(rule, List.of(base),
+					Map.of(ServiceId.of("SYN-LIMITED"), limitedReasons, ServiceId.of("SYN-SELECT"), selectReasons),
+					List.of()));
+
+			assertThat(result.unsupported()).containsExactly(
+					new UnsupportedService(ServiceId.of("SYN-LIMITED"), Set.of(UnsupportedReason.HAS_LIMIT_BUCKETS),
+							limitedReasons),
+					new UnsupportedService(ServiceId.of("SYN-SELECT"), Set.of(UnsupportedReason.REQUIRES_SELECTION),
+							selectReasons));
+			assertClassifiesExactlyOnce(result, rule);
+		}
+
+		@Test
+		void keepsPaddedSelectionReasonsWithoutTrimming() {
+			BenefitService pendingRule = rate("SYN-PENDING", 100);
+			CardRuleVersion rule = rule(resolvedPolicy(), List.of(pendingRule, limited("SYN-LIMITED")));
+			String padded = "  synthetic: padded  ";
+
+			CardServiceCandidates.Collected result = collect(new RuleSelection.Selected(rule, List.of(),
+					Map.of(ServiceId.of("SYN-PENDING"), List.of(padded), ServiceId.of("SYN-LIMITED"), List.of(padded)),
+					List.of()));
+
+			assertThat(result.unsupported()).extracting(UnsupportedService::selectionReasons)
+				.containsExactly(List.of(padded));
+			assertThat(result.needingConfirmation()).containsExactly(new ServiceNeedingConfirmation(
+					ServiceId.of("SYN-PENDING"), ConfirmationStage.RULE_SELECTION, List.of(padded)));
+		}
+
 	}
 
 	@Nested
@@ -549,6 +588,60 @@ class CardServiceCandidateCollectorTest {
 			CardRuleVersion withLimited = rule(resolvedPolicy(), List.of(base, limited("SYN-LIMITED")));
 			assertInconsistent(new RuleSelection.Selected(withLimited, List.of(base),
 					Map.of(ServiceId.of("SYN-LIMITED"), List.of()), List.of()));
+		}
+
+		@ParameterizedTest
+		@ValueSource(strings = { "", " ", "\t", "\n" })
+		void rejectsBlankSelectionReasonOfLimitedService(String blank) {
+			assertBlankReasonRejected(limited("SYN-LIMITED"), List.of(blank));
+		}
+
+		@ParameterizedTest
+		@ValueSource(strings = { "", " ", "\t", "\n" })
+		void rejectsBlankSelectionReasonOfSelectableService(String blank) {
+			assertBlankReasonRejected(selectable("SYN-SELECT"), List.of(blank));
+		}
+
+		@ParameterizedTest
+		@ValueSource(strings = { "", " ", "\t", "\n" })
+		void rejectsBlankSelectionReasonOfSupportedService(String blank) {
+			assertBlankReasonRejected(rate("SYN-PENDING", 200), List.of(blank));
+		}
+
+		@Test
+		void rejectsBlankReasonAmongValidReasons() {
+			List<String> mixed = List.of("synthetic: a", " ", "synthetic: b");
+
+			assertBlankReasonRejected(limited("SYN-LIMITED"), mixed);
+			assertBlankReasonRejected(selectable("SYN-SELECT"), mixed);
+			assertBlankReasonRejected(rate("SYN-PENDING", 200), mixed);
+		}
+
+		@Test
+		void nullSelectionReasonStillThrowsNullPointerException() {
+			// 선택 결과 생성은 사유 원소를 검사하지 않으므로 null 원소가 그대로 들어온다.
+			List<String> withNull = Arrays.asList("synthetic: a", null);
+
+			assertThatThrownBy(() -> collect(blockedSelection(limited("SYN-LIMITED"), withNull)))
+				.isInstanceOf(NullPointerException.class);
+			assertThatThrownBy(() -> collect(blockedSelection(rate("SYN-PENDING", 200), withNull)))
+				.isInstanceOf(NullPointerException.class);
+		}
+
+		private RuleSelection.Selected blockedSelection(BenefitService blocked, List<String> reasons) {
+			BenefitService base = rate("SYN-BASE", 100);
+			CardRuleVersion rule = rule(resolvedPolicy(), List.of(base, blocked));
+			Map<ServiceId, List<String>> reasonsByService = new HashMap<>();
+			reasonsByService.put(blocked.id(), reasons);
+			return new RuleSelection.Selected(rule, List.of(base), reasonsByService, List.of());
+		}
+
+		private void assertBlankReasonRejected(BenefitService blocked, List<String> reasons) {
+			RuleSelection.Selected selection = blockedSelection(blocked, reasons);
+
+			assertThatThrownBy(() -> CardServiceCandidateCollector.collect(selection, ORDER, performance(0)))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("blank confirmation reason");
 		}
 
 		private void assertInconsistent(RuleSelection.Selected selection) {

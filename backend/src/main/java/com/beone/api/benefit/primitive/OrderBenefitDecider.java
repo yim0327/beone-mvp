@@ -89,6 +89,26 @@ public final class OrderBenefitDecider {
 		};
 	}
 
+	/**
+	 * 취합된 후보로 서비스별 채택·기여액, 재확인 대상, 막는 사유와 카드 금액을 만든다.
+	 *
+	 * <p>
+	 * 취합기가 {@code Collected}를 돌려준 경우에만 호출하며, 그때 규칙 선택 결과는 {@code Selected}다. 후보마다 실적과 무관한 미충족은
+	 * {@code NOT_ADOPTED}·확정 0원, 실적 정책 영향(U4)이 있으면 사유를 남기고 0원 후보는 재확인 대상으로 분리하며, 영향 없는 0원 후보는
+	 * {@code NOT_ADOPTED}·확정 0원(U6)이다. 확인 필요·지원 범위 밖 서비스와 양수 후보 쌍의 중복 관계도 사유로 모은다(U2). 사유가 없으면
+	 * 최댓값, 같으면 서비스 ID가 앞선 후보 하나만 채택하고(U3) 양수 후보가 없으면 카드 금액은 확정 0원이다. 사유가 있으면 양수 후보는 모두
+	 * {@code UNDETERMINED}이고 기여액과 카드 금액은 같은 {@code 확인 필요} 값이다.
+	 *
+	 * <p>
+	 * 확정 후보 금액을 바꾸거나 한도·선택형·중복 합산을 계산하지 않는다. 결과의 대응·정렬·채택 불변식은 {@link OrderBenefit.Decided} 생성자가
+	 * 다시 확인한다.
+	 *
+	 * @param selection 취합에 쓴 규칙 선택 결과. 서비스 ID로 실적 조건·중복 관계를 찾는다
+	 * @param source 취합 결과. 그대로 결과에 보존한다
+	 * @param evidence 같은 카드의 취소 귀속·할인 매출 근거
+	 * @return 서비스 ID 순으로 정렬한 결정 결과
+	 * @throws IllegalStateException 지원 범위 서비스에서 나올 수 없는 한도 소진 후보를 받은 경우
+	 */
 	private static OrderBenefit.Decided decided(RuleSelection.Selected selection,
 			CardServiceCandidates.Collected source, PolicyTermEvidence evidence) {
 		Map<ServiceId, BenefitService> servicesById = selection.rule()
@@ -176,6 +196,14 @@ public final class OrderBenefitDecider {
 
 	/**
 	 * 원본 조건부 조건 중 실적 정책(취소 귀속·할인 매출 실적 제외)이면서 근거로 무시할 수 없는 조건의 설명.
+	 *
+	 * <p>
+	 * 근거가 {@code CONFIRMED_ABSENT}일 때만 조건을 무시한다(U4). 실적 정책이 아닌 조건은 근거가 없으므로 제외한다. 서비스별 실적 조건
+	 * 유무는 보지 않으며 호출 쪽이 함께 판단한다.
+	 *
+	 * @param source 조건부 조건을 담은 취합 결과
+	 * @param evidence 같은 카드의 취소 귀속·할인 매출 근거
+	 * @return 영향 가능 조건의 설명. 원본 조건 순서이며 없으면 빈 목록
 	 */
 	private static List<String> affectingPolicyTerms(CardServiceCandidates.Collected source,
 			PolicyTermEvidence evidence) {
@@ -191,6 +219,14 @@ public final class OrderBenefitDecider {
 
 	/**
 	 * 양수 후보 쌍마다 중복 관계를 본다. 양쪽이 확정이고 서로를 적지 않았을 때만 중복 불가로 확정한다.
+	 *
+	 * <p>
+	 * 한쪽이라도 미확정이거나 한쪽에만 적혀 있으면 {@code STACKING_UNRESOLVED}, 양쪽이 서로를 적었으면 {@code STACKING_CONFIRMED}다(U2).
+	 * 중복 허용 서비스의 합산은 하지 않는다.
+	 *
+	 * @param positives 서비스 ID 오름차순의 양수 후보. 쌍의 서비스 순서가 이 순서를 따른다
+	 * @param servicesById 규칙의 서비스. 모든 후보의 서비스가 있어야 한다
+	 * @return 쌍 단위 사유. 중복 불가로 확정된 쌍은 없다
 	 */
 	private static List<PendingReason> stackingReasons(List<ServiceCandidate> positives,
 			Map<ServiceId, BenefitService> servicesById) {
@@ -222,6 +258,12 @@ public final class OrderBenefitDecider {
 		return reasons;
 	}
 
+	/**
+	 * 지원 범위 밖 서비스 사유의 설명. 지원하지 않는 이유는 이름순으로, 규칙 선택 단계 사유는 원문 그대로 붙인다.
+	 *
+	 * @param unsupported 지원 범위 밖 서비스
+	 * @return 사람이 읽는 설명
+	 */
 	private static String unsupportedDetail(UnsupportedService unsupported) {
 		String detail = "service " + unsupported.serviceId() + " is not decided by this feature: "
 				+ unsupported.reasons().stream().map(Enum::name).sorted().collect(Collectors.joining(", "));
@@ -231,12 +273,24 @@ public final class OrderBenefitDecider {
 		return detail;
 	}
 
+	/**
+	 * 막는 사유가 있을 때 양수 후보 기여액과 카드 금액에 쓰는 {@code 확인 필요} 문구. 사유의 종류와 서비스만 나열하고 설명은 사유 목록에 남긴다.
+	 *
+	 * @param reasons 정렬된 막는 사유. 비어 있지 않다
+	 * @return 공백이 아닌 확인 필요 문구
+	 */
 	private static String pendingSummary(List<PendingReason> reasons) {
 		return "order benefit needs confirmation: " + reasons.stream()
 			.map(reason -> reason.kind() + " " + reason.services())
 			.collect(Collectors.joining(", "));
 	}
 
+	/**
+	 * 후보를 채택하지 않고 기여액을 확정 0원으로 둔다. 원본 후보 금액은 바꾸지 않는다.
+	 *
+	 * @param candidate 원본 후보 판정
+	 * @return {@code NOT_ADOPTED}·확정 0원 결과
+	 */
 	private static OrderServiceBenefit notAdopted(ServiceCandidate candidate) {
 		return new OrderServiceBenefit(candidate, Adoption.NOT_ADOPTED, BenefitAmount.confirmed(0));
 	}

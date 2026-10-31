@@ -81,6 +81,14 @@ public record PendingReason(Kind kind, List<ServiceId> services, String detail) 
 		}
 	}
 
+	/**
+	 * 서비스 ID 목록을 앞에서부터 {@link #SERVICE_ORDER}로 비교하고, 앞부분이 모두 같으면 짧은 목록을 앞에 둔다. {@link #ORDER}가 같은
+	 * 종류의 사유를 정렬할 때 쓴다.
+	 *
+	 * @param left 왼쪽 서비스 ID 목록
+	 * @param right 오른쪽 서비스 ID 목록
+	 * @return 왼쪽이 앞이면 음수, 같으면 0, 뒤면 양수
+	 */
 	private static int compareServices(List<ServiceId> left, List<ServiceId> right) {
 		for (int i = 0; i < Math.min(left.size(), right.size()); i++) {
 			int compared = SERVICE_ORDER.compare(left.get(i), right.get(i));

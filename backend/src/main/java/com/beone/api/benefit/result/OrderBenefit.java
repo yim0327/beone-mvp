@@ -125,6 +125,15 @@ public sealed interface OrderBenefit {
 			return source.cardId();
 		}
 
+		/**
+		 * {@code services}와 {@code rechecks}의 후보가 원본 후보와 다중집합으로 같은지 확인한다. 같은 후보가 두 번 나오거나 원본에 없는 후보,
+		 * 결정되지 않은 원본 후보가 있으면 거부한다. 후보 비교는 {@code equals}이므로 원본 판정을 바꾼 후보도 원본에 없는 후보로 본다.
+		 *
+		 * @param source 원본 취합 결과
+		 * @param services 최종 결과를 정한 후보
+		 * @param rechecks 재확인 후보
+		 * @throws IllegalArgumentException 원본 후보와 정확히 한 번씩 대응하지 않는 경우
+		 */
 		private static void requireSourceCoverage(CardServiceCandidates.Collected source,
 				List<OrderServiceBenefit> services, List<PerformanceRecheck> rechecks) {
 			List<ServiceCandidate> remaining = new ArrayList<>(source.candidates());
@@ -143,6 +152,13 @@ public sealed interface OrderBenefit {
 			}
 		}
 
+		/**
+		 * 서비스 ID가 {@link PendingReason#SERVICE_ORDER}로 엄격한 오름차순인지 확인한다. 같은 ID가 이어지면 중복으로 거부하며, 정렬해 주지 않는다.
+		 *
+		 * @param ids 검사할 서비스 ID 목록
+		 * @param name 오류 문구에 쓰는 목록 이름
+		 * @throws IllegalArgumentException 오름차순이 아니거나 같은 ID가 있는 경우
+		 */
 		private static void requireAscending(List<ServiceId> ids, String name) {
 			for (int i = 1; i < ids.size(); i++) {
 				if (PendingReason.SERVICE_ORDER.compare(ids.get(i - 1), ids.get(i)) >= 0) {
@@ -151,6 +167,21 @@ public sealed interface OrderBenefit {
 			}
 		}
 
+		/**
+		 * 사유와 서비스 분류의 대응을 확인한다. 사유의 서비스는 종류별 허용 분류(확인 필요→{@code needingConfirmation}, 범위 밖→
+		 * {@code unsupported}, 실적 정책→재확인 후보나 양수 후보, 중복 관계→양수 후보)에 있어야 하고, 확인 필요·범위 밖·재확인 서비스는 각각
+		 * 해당 종류 사유가 있어야 한다.
+		 *
+		 * <p>
+		 * 양수 후보에 실적 정책 사유가 있어야 하는지, 양수 후보 쌍에 중복 관계 사유가 있어야 하는지는 규칙의 실적 조건·중복 관계가 있어야 알 수
+		 * 있으므로 확인하지 않는다(결정기 책임).
+		 *
+		 * @param source 확인 필요·범위 밖 서비스를 담은 원본 취합 결과
+		 * @param services 최종 결과를 정한 후보. 양수 후보를 고른다
+		 * @param rechecks 재확인 후보
+		 * @param reasons 막는 사유
+		 * @throws IllegalArgumentException 사유가 허용 분류 밖 서비스를 가리키거나 필요한 사유가 없는 경우
+		 */
 		private static void requireReasonLinks(CardServiceCandidates.Collected source, List<OrderServiceBenefit> services,
 				List<PerformanceRecheck> rechecks, List<PendingReason> reasons) {
 			Set<ServiceId> pending = new HashSet<>();
@@ -185,6 +216,14 @@ public sealed interface OrderBenefit {
 			requireLinked(linked, PendingReason.Kind.PERFORMANCE_POLICY, rechecked);
 		}
 
+		/**
+		 * 필요한 서비스가 모두 해당 종류 사유에 포함됐는지 확인한다.
+		 *
+		 * @param linked 종류별로 사유가 가리킨 서비스
+		 * @param kind 확인할 사유 종류
+		 * @param required 이 종류 사유가 있어야 하는 서비스
+		 * @throws IllegalArgumentException 사유가 없는 서비스가 있는 경우
+		 */
 		private static void requireLinked(Map<PendingReason.Kind, Set<ServiceId>> linked, PendingReason.Kind kind,
 				Set<ServiceId> required) {
 			Set<ServiceId> missing = new HashSet<>(required);
@@ -194,6 +233,15 @@ public sealed interface OrderBenefit {
 			}
 		}
 
+		/**
+		 * 카드 금액과 서비스별 채택의 조합을 확인한다. 카드 금액은 사유가 없을 때만 확정이고(U2), 확정 0원 후보는 사유 여부와 관계없이
+		 * {@code NOT_ADOPTED}다(U6). 나머지는 카드 금액 확정 여부에 따라 {@link #requireConfirmed} 또는 {@link #requirePending}이 확인한다.
+		 *
+		 * @param services 최종 결과를 정한 후보
+		 * @param reasons 막는 사유
+		 * @param orderBenefit 카드 금액
+		 * @throws IllegalArgumentException 조합이 맞지 않는 경우
+		 */
 		private static void requireAdoptions(List<OrderServiceBenefit> services, List<PendingReason> reasons,
 				BenefitAmount orderBenefit) {
 			if (orderBenefit.isConfirmed() != reasons.isEmpty()) {
@@ -215,6 +263,18 @@ public sealed interface OrderBenefit {
 			}
 		}
 
+		/**
+		 * 카드 금액이 확정일 때의 채택을 확인한다(U3). {@code UNDETERMINED}·미확정 기여액이 없고, 카드 금액이 기여액 합이며, 양수 후보 중
+		 * 금액이 가장 크고 같으면 서비스 ID가 앞선 하나만 후보 금액 그대로 {@code ADOPTED}다. 양수 후보가 없으면 {@code ADOPTED}가 없어야 한다.
+		 *
+		 * <p>
+		 * 채택된 후보 외의 후보가 막는 사유 없이 중복 불가로 확정됐는지는 규칙이 있어야 알 수 있으므로 확인하지 않는다.
+		 *
+		 * @param services 최종 결과를 정한 후보
+		 * @param orderBenefit 확정 카드 금액
+		 * @throws IllegalArgumentException 채택·기여액·합계가 맞지 않는 경우
+		 * @throws ArithmeticException 기여액 합이 {@code long} 범위를 넘는 경우
+		 */
 		private static void requireConfirmed(List<OrderServiceBenefit> services, BenefitAmount orderBenefit) {
 			long total = 0;
 			for (OrderServiceBenefit service : services) {
@@ -252,6 +312,13 @@ public sealed interface OrderBenefit {
 			}
 		}
 
+		/**
+		 * 카드 금액이 {@code 확인 필요}일 때의 채택을 확인한다. {@code ADOPTED}가 없고, 양수 후보는 모두 {@code UNDETERMINED}·기여액
+		 * {@code 확인 필요}다. 기여액 문구가 카드 금액 문구와 같은지는 확인하지 않는다.
+		 *
+		 * @param services 최종 결과를 정한 후보
+		 * @throws IllegalArgumentException 채택이나 기여액이 맞지 않는 경우
+		 */
 		private static void requirePending(List<OrderServiceBenefit> services) {
 			for (OrderServiceBenefit service : services) {
 				if (service.adoption() == Adoption.ADOPTED) {
@@ -266,10 +333,22 @@ public sealed interface OrderBenefit {
 			}
 		}
 
+		/**
+		 * 후보 금액이 확정이고 0원보다 큰지 본다. 확인 필요 금액은 양수로 보지 않는다.
+		 *
+		 * @param candidate 원본 후보 판정
+		 * @return 확정 양수 후보이면 {@code true}
+		 */
 		private static boolean isPositive(ServiceCandidate candidate) {
 			return candidate.standaloneAmount().isConfirmed() && candidate.standaloneAmount().confirmedWon().isPositive();
 		}
 
+		/**
+		 * 오류 문구용으로 결과의 서비스 ID를 목록 순서대로 꺼낸다.
+		 *
+		 * @param services 결과 목록
+		 * @return 서비스 ID 목록
+		 */
 		private static List<ServiceId> ids(List<OrderServiceBenefit> services) {
 			return services.stream().map(service -> service.candidate().serviceId()).toList();
 		}

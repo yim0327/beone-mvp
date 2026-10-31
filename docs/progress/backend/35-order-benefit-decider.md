@@ -14,3 +14,7 @@
 - 검증: `./gradlew test --rerun-tasks`, `./gradlew build --rerun-tasks`, `./gradlew javadoc --rerun-tasks`, `git diff --check`, 신규 파일 행 끝 공백 검사, 수정 문서 상대 링크·앵커 검사. 모두 실제 실행·통과(단위 363·웹 25·통합 3개, skip 0. 기준 `76198ec` + 미커밋 변경). 신규 테스트는 단위 97개(결정기 37, 결과·입력 타입 60)이며 합성 값 검증입니다. Javadoc 경고는 변경 전 기준선 277건과 위치·내용이 같고, 신규 main 파일 5개는 doclint 경고 0건입니다.
 - 자체 리뷰: 작업자 본인의 읽기 전용 내부 리뷰이며 팀원 승인·외부 리뷰가 아닙니다. 신규 공개 타입의 Javadoc 누락(경고 13건)을 찾아 보완했고, 그 뒤 `test`·`build`·`javadoc`을 다시 실행했습니다.
 - 다음: 커밋·push·PR은 사용자 승인 대기.
+
+## 2026-10-31 · 주석 보완·로컬 검증 · 완료(커밋 전)
+- 한 일: PR #36 리뷰의 Docstring Coverage 지적에 따라 설명이 없던 private 메서드에 Javadoc을 달았습니다. `OrderBenefitDecider`(`decided`·`unsupportedDetail`·`pendingSummary`·`notAdopted`, `affectingPolicyTerms`·`stackingReasons`의 @param·@return), `OrderBenefit.Decided`의 검증 메서드 9개, `PendingReason.compareServices`가 대상이며 책임·호출 전제·정책(U2·U3·U4·U6)·확인하지 않는 판단을 적었습니다. 로직·시그니처·문자열·테스트는 바꾸지 않았습니다.
+- 검증: `.java` 변경 줄이 모두 주석·공백임을 스크립트로 확인했습니다. `./gradlew build --rerun-tasks`·`./gradlew javadoc --rerun-tasks`는 실제 실행·통과(단위 363·웹 25·통합 3개, skip 0)했고, 제한 없는 Javadoc 경고는 기준선 277건과 줄 번호까지 같습니다. 로컬 결과이며 CodeRabbit 수치가 기준을 넘는다는 뜻은 아닙니다.

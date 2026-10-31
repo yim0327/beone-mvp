@@ -16,6 +16,7 @@ class WebNavigationPolicyTest {
         assertEquals(WebOrigin("https", "example.test", 443), WebOrigin.parse("https://example.test/a?b=c#d"))
         assertEquals(WebOrigin("https", "example.test", 443), WebOrigin.parse("https://example.test:443/"))
         assertEquals(WebOrigin("http", "localhost", 5173), WebOrigin.parse("http://localhost:5173"))
+        assertEquals(WebOrigin.parse("http://localhost/"), WebOrigin.parse("http://localhost:80/"))
     }
 
     @Test

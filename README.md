@@ -84,6 +84,8 @@ cd android
 ./gradlew installDebug
 ```
 
+debug 앱은 개발 서버 `http://localhost:5173/`을 엽니다. 실기기에서는 프런트엔드 개발 서버를 켠 뒤 `adb reverse tcp:5173 tcp:5173`으로 연결합니다. 주소는 `./gradlew installDebug -Pbeone.devServerUrl=<주소>`로 바꿀 수 있습니다. release 앱의 웹 화면 주소는 아직 정하지 않았습니다([`docs/android/webview-shell.md`](docs/android/webview-shell.md)).
+
 ## 빌드·테스트
 
 ### Backend

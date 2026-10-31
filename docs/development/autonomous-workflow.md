@@ -99,16 +99,18 @@
    - 대상: `CLAUDE.md`, `docs/development/autonomous-workflow.md`, `docs/development/backend-start.md`, `docs/development/android-start.md`, `docs/decisions.md`
    - 기준은 1단계에서 기록한 `origin/develop` SHA로 고정합니다. 비교 중에 다시 fetch하거나 기준을 바꾸지 않습니다.
    - 파일마다 기준 커밋의 내용(`git show "<기준 SHA>:<파일>"`)과 worktree의 실제 파일을 `cmp`로 바이트 단위 비교합니다. tracked·untracked 여부와 관계없이 같은 방식으로 비교하고, 마지막 줄바꿈 등 내용을 정규화하지 않습니다.
-   - 비교 결과를 남길 증거 폴더를 저장소 밖의 지정 위치에 새 이름으로 정합니다. 이미 있는 폴더는 덮어쓰지 않습니다.
+   - 비교 결과를 남길 증거 폴더를 저장소 밖의 지정 위치에 새 이름의 절대 경로로 정합니다. 마지막 폴더는 `mkdir`로 새로 만들어, 이미 있거나 동시에 만들어진 폴더는 덮어쓰지 않고 거부합니다. worktree 안의 경로도 거부합니다.
    - 고른 worktree의 최상위에서 `PUT_SHA_HERE`를 기록한 SHA로, `PUT_EVIDENCE_DIR_HERE`를 증거 폴더 경로로 바꿔 bash로 실행합니다. 괄호는 하위 셸이라 `exit`가 현재 셸을 닫지 않습니다. 종료 코드 `0`은 5개 모두 일치, `1`은 누락·차이·조회·읽기 오류, `2`는 기준 SHA나 증거 폴더 오류입니다.
 
      ```bash
      (
        base=PUT_SHA_HERE
-       out=PUT_EVIDENCE_DIR_HERE
+       out="PUT_EVIDENCE_DIR_HERE"
        git rev-parse --verify --quiet "$base^{commit}" >/dev/null || { echo "기준 조회 오류: $base"; exit 2; }
-       [ -e "$out" ] && { echo "증거 폴더가 이미 있음: $out"; exit 2; }
-       mkdir -p "$out/base" || { echo "증거 폴더 생성 오류: $out"; exit 2; }
+       case "$out" in /*) ;; *) echo "증거 폴더는 절대 경로여야 함: $out"; exit 2 ;; esac
+       top=$(git rev-parse --show-toplevel) && toplink=$(cd "$top" && pwd -P) || { echo "worktree 확인 오류"; exit 2; }
+       case "$out/" in "$top"/*|"$toplink"/*) echo "증거 폴더가 worktree 안에 있음: $out"; exit 2 ;; esac
+       mkdir -p "$(dirname "$out")" && mkdir "$out" && mkdir "$out/base" || { echo "증거 폴더가 이미 있거나 생성 오류: $out"; exit 2; }
        log() { echo "$1" | tee -a "$out/result.txt"; }
        log "base $base / head $(git rev-parse HEAD) / branch $(git rev-parse --abbrev-ref HEAD)"
        result=0

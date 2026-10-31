@@ -69,6 +69,24 @@ class VirtualCardActivationViewModelTest {
         assertEquals(AuthRequestPhase.Idle, viewModel.requestPhase)
     }
 
+    // 활성 중에도 대기 단계면 재인증 요청을 라이브러리에 보내고, 성공하면 남은 시간 없이 새 60초로 시작한다.
+    @Test
+    fun requestWhileActiveIsSentAndSuccessRestartsSixtySeconds() {
+        viewModel.requestAuthentication(authenticator)
+        succeed()
+        now += 40_000L
+
+        assertTrue(viewModel.requestAuthentication(authenticator))
+        assertEquals(2, authenticator.promptCount)
+        assertEquals(20_000L, viewModel.remainingMillis())
+
+        succeed(AuthMethod.DEVICE_CREDENTIAL)
+
+        assertEquals(ActivationState.Active(expiresAtMillis = now + 60_000L, method = AuthMethod.DEVICE_CREDENTIAL), viewModel.state)
+        assertEquals(60_000L, viewModel.remainingMillis())
+        assertEquals(AuthRequestPhase.Idle, viewModel.requestPhase)
+    }
+
     // E4
     @Test
     fun requestNotSentToLibraryReturnsToIdle() {

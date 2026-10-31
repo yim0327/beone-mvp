@@ -67,6 +67,13 @@ class WebNavigationPolicyTest {
         assertFalse(httpsPolicy.isAllowed("file:///android_asset/index.html"))
     }
 
+    // about:blank·blob: 주소는 신뢰 origin이 아니므로 메인 프레임 탐색에서 막는다.
+    @Test
+    fun blankAndBlobUrlsAreNotTrusted() {
+        assertFalse(devPolicy.isAllowed("about:blank"))
+        assertFalse(devPolicy.isAllowed("blob:http://localhost:5173/0b6c0f8e-1d2a-4c5e-9f00-000000000000"))
+    }
+
     @Test
     fun missingConfigurationAllowsNothing() {
         val policy = WebNavigationPolicy("")

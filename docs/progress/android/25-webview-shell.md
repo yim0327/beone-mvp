@@ -32,3 +32,10 @@
 - 검증: `testDebugUnitTest --rerun-tasks` 실제 실행, 통과. 단위 테스트 15건(XML 집계, 기존 12건 + 신규 3건), 실패·skip 0(기준 `fa423f3` + 미커밋 테스트 변경)
 - 남은 제한: 소스 설정 검사이며 기기에서 실제 연결이 막히는지는 확인하지 않았습니다. 실기기·계측 테스트는 미실행입니다.
 - 다음: 실기기 확인 절차 정리, 모듈 전체 검증, PR 본문 갱신
+
+### 2026-10-31 18:20 · 실기기 확인 절차·release 정적 점검·PR 갱신 · 완료(실기기 미실행)
+- 한 일: W1~W5를 사용자가 바로 시험할 수 있게 설치·APK 대조 절차와 항목별 증거를 [기술 설명](../../android/webview-shell.md#실기기-확인-절차-2026-10-31-준비-미실행)에 정리했습니다. release APK의 Manifest·네트워크 보안 설정·dex를 점검했고, `about:blank`·`blob:` 차단 테스트를 더했습니다. PR 본문 검증 칸을 최신 head 기준으로 갱신했습니다.
+- 서비스에서 달라진 점: 없음(문서·테스트만).
+- 검증: `assembleDebug testDebugUnitTest lintDebug assembleRelease lintRelease --rerun-tasks` 실제 실행, 통과(단위 테스트 16건 XML 집계, lint 오류 0·경고 7). release에 `debuggable`·평문 허용·개발 서버 주소·앱 로그 호출이 없음을 확인했습니다. debug·release APK는 `844841e` 때와 같은 바이트입니다.
+- 남은 제한: 실기기·실제 React 화면·계측 테스트 미실행. W2 판정 기준, W3 계열 실행 방식, release 시험용 서명은 사용자 결정 대기. 독립 리뷰는 과금 여부가 불명확해 요청하지 않음(리뷰 대기)
+- 다음: 결정·기기 승인 뒤 실기기 확인, release 로딩 방식 결정 뒤 구현
